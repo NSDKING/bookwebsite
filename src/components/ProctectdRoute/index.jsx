@@ -6,6 +6,7 @@ import Modal from '../../components/AddArticleModal/index';
 import EditModal from '../../components/EditModal';
 import { generateClient } from 'aws-amplify/api';
 import { getCurrentUser } from 'aws-amplify/auth';
+import CircularProgress from '@mui/material/CircularProgress';
  
 export default function Dashboard() {
   const [articles, setArticles] = useState([]);
@@ -16,16 +17,20 @@ export default function Dashboard() {
   const [alert, setAlert] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState('');
+  const [loading, setLoading] = useState(true);
   const client = generateClient();
  
   // Fetch articles from the backend
   const fetchArticles = async () => {
+    setLoading(true);
     try {
       const listArticlesResponse = await client.graphql({ query: listArticlesWithDetails });
       setArticles(listArticlesResponse.data.listArticles.items);
       console.log(listArticlesResponse.data.listArticles.items);
     } catch (error) {
       console.error("Error fetching articles:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -143,6 +148,25 @@ export default function Dashboard() {
     return "No content available...";
   };
 
+  // Get the direct image from the article
+  const getDirectImage = (article) => {
+    // Get images directly attached to the article (not in paragraphs)
+    if (article.Images?.items && article.Images.items.length > 0) {
+      // Sort by positions if available
+      const sortedImages = [...article.Images.items].sort((a, b) => {
+        if (a.positions && b.positions) {
+          return a.positions - b.positions;
+        }
+        return 0; // Keep original order if positions not available
+      });
+      
+      return sortedImages[0].link;
+    }
+    
+    // Return a placeholder if no direct image is found
+    return "https://via.placeholder.com/300x200?text=No+Image";
+  };
+
   return (
     <div className="main-container">
       <Header />
@@ -169,40 +193,56 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="articles-grid">
-          {filteredArticles.length > 0 ? (
-            filteredArticles.map(article => (
-              <div className="article-card" key={article.id}>
-                {/* Fixed property names to match GraphQL schema */}
-                <h3 className="article-title">{article.titles}</h3>
-                <p className="article-excerpt">{getExcerpt(article)}</p>
-                <div className="article-footer">
-                  <span className="article-date">
-                    {new Date(article.createdAt).toLocaleDateString()}
-                  </span>
-                  <div className="article-actions">
-                    <button 
-                      className="edit-button" 
-                      onClick={() => handleEditClick(article)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="delete-button" 
-                      onClick={() => handleDeleteArticle(article.id)}
-                    >
-                      Delete
-                    </button>
+        {loading ? (
+          <div className="loading-container">
+            <CircularProgress />
+          </div>
+        ) : (
+          <div className="articles-grid">
+            {filteredArticles.length > 0 ? (
+              filteredArticles.map(article => (
+                <div className="article-card" key={article.id}>
+                  {/* Article Image - Using only direct images */}
+                  <div className="article-image-container">
+                    <img 
+                      src={getDirectImage(article)} 
+                      alt={article.titles || "Article image"} 
+                      className="article-image"
+                    />
+                  </div>
+                  
+                  {/* Article Content */}
+                  <h3 className="article-title">{article.titles}</h3>
+                  <p className="article-excerpt">{getExcerpt(article)}</p>
+                  
+                  <div className="article-footer">
+                    <span className="article-date">
+                      {new Date(article.createdAt).toLocaleDateString()}
+                    </span>
+                    <div className="article-actions">
+                      <button 
+                        className="edit-button" 
+                        onClick={() => handleEditClick(article)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-button" 
+                        onClick={() => handleDeleteArticle(article.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="no-articles">
+                {search ? 'No articles match your search' : 'No articles available'}
               </div>
-            ))
-          ) : (
-            <div className="no-articles">
-              {search ? 'No articles match your search' : 'No articles available'}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {isModalOpen && (

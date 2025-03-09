@@ -9,6 +9,10 @@ export const onCreateUser = /* GraphQL */ `
       editor
       admin
       logid
+      Articles {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -23,6 +27,10 @@ export const onUpdateUser = /* GraphQL */ `
       editor
       admin
       logid
+      Articles {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -37,6 +45,10 @@ export const onDeleteUser = /* GraphQL */ `
       editor
       admin
       logid
+      Articles {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -140,6 +152,7 @@ export const onCreateParagraphes = /* GraphQL */ `
         nextToken
         __typename
       }
+      articlesID
       createdAt
       updatedAt
       __typename
@@ -159,6 +172,7 @@ export const onUpdateParagraphes = /* GraphQL */ `
         nextToken
         __typename
       }
+      articlesID
       createdAt
       updatedAt
       __typename
@@ -178,6 +192,7 @@ export const onDeleteParagraphes = /* GraphQL */ `
         nextToken
         __typename
       }
+      articlesID
       createdAt
       updatedAt
       __typename
@@ -240,6 +255,11 @@ export const onCreateArticles = /* GraphQL */ `
         nextToken
         __typename
       }
+      userID
+      Paragraphes {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -257,6 +277,11 @@ export const onUpdateArticles = /* GraphQL */ `
         nextToken
         __typename
       }
+      userID
+      Paragraphes {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -271,6 +296,11 @@ export const onDeleteArticles = /* GraphQL */ `
       rubrique
       caroussel
       Images {
+        nextToken
+        __typename
+      }
+      userID
+      Paragraphes {
         nextToken
         __typename
       }

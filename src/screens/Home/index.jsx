@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './index.css'
 import SearchBar from '../../components/SearchBar';
 import Carousel from '../../components/Carousel'
@@ -7,6 +7,7 @@ import test1 from '../../img/test1.jpg'
 import test3 from '../../img/test3.jpg'
 import SubHeader from '../../components/SubHeader';
 import BottomTab from '../../components/BottomTabs';
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 const images = [test1, test3]
 
@@ -32,7 +33,10 @@ const imgdata = [
 const Home = () => {
     const [activeIndex, setActiveIndex] = useState(0);
     const navItems = ["Tous","Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
-
+    const { authStatus } = useAuthenticator(context => [context.authStatus]);
+    useEffect(() => {
+      console.log(authStatus)
+    }, [authStatus])
  
   return (
     <main>

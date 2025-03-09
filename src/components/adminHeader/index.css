@@ -9,8 +9,9 @@
   justify-content: space-between;
   align-items: center;
   z-index: 50;
+  text-decoration: none;
 }
-
+ 
 .logo {
   display: flex;
   align-items: center;
@@ -39,7 +40,7 @@
   font-size: 14px;
 }
 
-.header-title {
+.header-titles {
   margin: 0;
   font-size: 18px;
 }
@@ -76,6 +77,8 @@
   list-style-type: none;
   margin: 0;
   padding: 0;
+  border: none;
+
 }
 
 .nav-list li {
@@ -87,6 +90,7 @@
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
+  border: none;
 }
 
 .nav-link:hover {
@@ -95,6 +99,8 @@
 
 .mobile-nav {
   display: none;
+  border: none;
+
 }
 
 /* Media Queries */

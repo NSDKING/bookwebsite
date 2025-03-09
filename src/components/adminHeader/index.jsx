@@ -16,7 +16,7 @@ export default function Header() {
           <div className="logo-icon">
             <span>L</span>
           </div>
-          <h1 className="header-title">
+          <h1 className="header-titles">
             <span className="title-main">laLecture</span>
             <span className="title-secondary">jecontribue</span>
           </h1>

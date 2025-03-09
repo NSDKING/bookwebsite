@@ -4,6 +4,7 @@ type User @model @auth(rules: [{allow: public}]) {
   editor: Boolean
   admin: Boolean
   logid: String
+  Articles: [Articles] @hasMany(indexName: "byUser", fields: ["id"])
 }
 
 type Agendas @model @auth(rules: [{allow: public}]) {
@@ -28,6 +29,7 @@ type Paragraphes @model @auth(rules: [{allow: public}]) {
   title: String
   order: String
   Images: [Images] @hasMany(indexName: "byParagraphes", fields: ["id"])
+  articlesID: ID! @index(name: "byArticles")
 }
 
 type Images @model @auth(rules: [{allow: public}]) {
@@ -45,4 +47,7 @@ type Articles @model @auth(rules: [{allow: public}]) {
   rubrique: String
   caroussel: Boolean
   Images: [Images] @hasMany(indexName: "byArticles", fields: ["id"])
-} 
+  userID: ID! @index(name: "byUser")
+  Paragraphes: [Paragraphes] @hasMany(indexName: "byArticles", fields: ["id"])
+}
+ 

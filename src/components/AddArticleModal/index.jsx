@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
 import { createArticles, createParagraphes, createImages } from '../../graphql/mutations';
 import { generateClient } from 'aws-amplify/api';
@@ -23,6 +23,105 @@ const Modal = ({ onClose, onSubmit, userId }) => {
   const fileInputRef = useRef(null);
   const client = generateClient();
 
+  useEffect(() => {
+    console.log(userId)
+  }, [userId]);
+
+  // Function to compress image to target size
+  const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
+    return new Promise((resolve) => {
+      // Create an image element to load the base64 string
+      const img = new Image();
+      img.src = base64String;
+      
+      img.onload = () => {
+        // Create a canvas to draw and compress the image
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Initial scaling - reduce dimensions for very large images
+        const initialScaleFactor = Math.min(1, 1200 / Math.max(width, height));
+        width = Math.floor(width * initialScaleFactor);
+        height = Math.floor(height * initialScaleFactor);
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw the image on the canvas
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Binary search to find optimal quality
+        const compressWithQuality = (min, max, attempts = 8) => {
+          // Base case - if we've tried enough or min/max are too close
+          if (attempts <= 0 || (max - min) < 0.01) {
+            // Use the min (lowest) quality to ensure we're under size limit
+            return canvas.toDataURL('image/jpeg', min);
+          }
+          
+          // Try the middle quality
+          const mid = (min + max) / 2;
+          const midResult = canvas.toDataURL('image/jpeg', mid);
+          
+          // Calculate the size in KB (base64 string length * 0.75 / 1024)
+          const size = (midResult.length * 0.75) / 1024;
+          
+          console.log(`Attempt ${9-attempts}: Quality ${mid.toFixed(2)}, Size: ${size.toFixed(2)}KB`);
+          
+          if (size > targetSizeKB) {
+            // Too big, try a lower quality
+            return compressWithQuality(min, mid, attempts - 1);
+          } else {
+            // Good size, but try to improve quality if possible
+            return compressWithQuality(mid, max, attempts - 1);
+          }
+        };
+        
+        // Try compression with binary search for optimal quality between 0.1 and 0.9
+        let compressed = compressWithQuality(0.1, 0.9);
+        let compressedSize = (compressed.length * 0.75) / 1024;
+        
+        // If we couldn't get it small enough with quality adjustment,
+        // reduce dimensions and try again
+        if (compressedSize > targetSizeKB) {
+          console.log(`Still too large (${compressedSize.toFixed(2)}KB), reducing dimensions`);
+          
+          // Progressive dimension reduction
+          const scaleDown = () => {
+            // Reduce dimensions by 30%
+            width = Math.floor(width * 0.7);
+            height = Math.floor(height * 0.7);
+            
+            console.log(`Resizing to ${width}x${height}`);
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Try with highest quality first after resizing
+            const resized = canvas.toDataURL('image/jpeg', 0.7);
+            const newSize = (resized.length * 0.75) / 1024;
+            
+            if (newSize > targetSizeKB && width > 100 && height > 100) {
+              // Still too big and not too small yet, keep reducing
+              return scaleDown();
+            }
+            
+            return resized;
+          };
+          
+          compressed = scaleDown();
+        }
+        
+        // Log final size
+        const finalSize = (compressed.length * 0.75) / 1024;
+        console.log(`Final image size: ${finalSize.toFixed(2)}KB`);
+        
+        resolve(compressed);
+      };
+    });
+  };
   
   // Improved function to create an article with paragraphs and images using GraphQL mutations
   const createArticleWithContent = async () => {
@@ -37,8 +136,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
         titles: title,
         userID: userId,
         rubrique: rubrique.toLowerCase(),
-        caroussel: false,
-        Images: []  // This will be handled separately
+        caroussel: false
       };
       
       // Create the article
@@ -54,6 +152,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
       }
       
       const articleId = articleResult.data.createArticles.id;
+      let paragraphIds = [];
       
       // 2. Create each paragraph and its images
       for (let i = 0; i < paragraphs.length; i++) {
@@ -64,8 +163,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
           text: paragraph.text,
           articlesID: articleId,
           order: i.toString(),
-          title: i === 0 ? title : undefined, // Only set title for the first paragraph
-          Images: []  // This will be handled separately
+          title: i === 0 ? title : undefined // Only set title for the first paragraph
         };
         
         const paragraphResult = await client.graphql({
@@ -80,40 +178,60 @@ const Modal = ({ onClose, onSubmit, userId }) => {
         }
         
         const paragraphId = paragraphResult.data.createParagraphes.id;
+        paragraphIds.push(paragraphId);
         
-        // If this paragraph has an image, create the image record with the base64 string
+        // If this paragraph has an image, compress and create the image record
         if (paragraph.image && paragraph.imagePreview) {
-          const imageInput = {
-            link: paragraph.imagePreview, // Store the base64 string directly
-            descriptions: paragraph.imageDescription || '',
-            positions: "center", // Default position
-            paragraphesID: paragraphId
+          try {
+            // Compress the image to target size
+            const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
+            
+            const imageInput = {
+              link: compressedImage,
+              description: paragraph.imageDescription || '',
+              positions: "center",
+              articlesID: articleId,
+              paragraphesID: paragraphId
+            };
+            
+            await client.graphql({
+              query: createImages,
+              variables: {
+                input: imageInput
+              }
+            });
+          } catch (error) {
+            console.error(`Error processing image for paragraph ${i}:`, error);
+            setErrorMessage(`Erreur lors du traitement de l'image du paragraphe ${i+1}`);
+          }
+        }
+      }
+      
+      // 3. If there's a cover image, compress and create it associated with the article
+      if (coverImage && coverPreview) {
+        try {
+          // Compress the cover image to target size
+          const compressedCoverImage = await compressImageToTargetSize(coverPreview);
+          
+          // Use the first paragraph ID for the cover image
+          const coverImageInput = {
+            link: compressedCoverImage,
+            description: coverDescription || '',
+            positions: "cover",
+            articlesID: articleId,
+            paragraphesID: paragraphIds[0] || "" // Use the first paragraph ID or empty string
           };
           
           await client.graphql({
             query: createImages,
             variables: {
-              input: imageInput
+              input: coverImageInput
             }
           });
+        } catch (error) {
+          console.error("Error processing cover image:", error);
+          setErrorMessage("Erreur lors du traitement de l'image de couverture");
         }
-      }
-      
-      // 3. If there's a cover image, create it associated with the article
-      if (coverImage && coverPreview) {
-        const coverImageInput = {
-          link: coverPreview,
-          descriptions: coverDescription || '',
-          positions: "cover", // Indicating this is a cover image
-          articlesID: articleId
-        };
-        
-        await client.graphql({
-          query: createImages,
-          variables: {
-            input: coverImageInput
-          }
-        });
       }
       
       console.log("Article, paragraphs, and images created successfully");
@@ -226,21 +344,9 @@ const Modal = ({ onClose, onSubmit, userId }) => {
     }
     
     if (!userId) {
+      console.log(userId);
       setErrorMessage('L\'ID utilisateur est manquant. Veuillez vous reconnecter.');
       return false;
-    }
-    
-    // Check image sizes - base64 strings can be large
-    if (coverPreview && coverPreview.length > 5000000) { // ~5MB limit
-      setErrorMessage('L\'image de couverture est trop volumineuse. Veuillez utiliser une image plus petite.');
-      return false;
-    }
-    
-    for (let i = 0; i < paragraphs.length; i++) {
-      if (paragraphs[i].imagePreview && paragraphs[i].imagePreview.length > 5000000) {
-        setErrorMessage(`L'image du paragraphe ${i + 1} est trop volumineuse. Veuillez utiliser une image plus petite.`);
-        return false;
-      }
     }
     
     setErrorMessage('');

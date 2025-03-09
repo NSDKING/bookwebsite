@@ -1,0 +1,14 @@
+{
+  "resourceName": "s3bookwebsitestorage75dfc0f2",
+  "bucketName": "bookwebsite-storage-75dfc0f2",
+  "policyUUID": "7071cac4",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "READ"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ]
+}

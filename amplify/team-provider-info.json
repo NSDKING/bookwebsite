@@ -10,6 +10,11 @@
       "StackName": "amplify-bookwebsite-staging-5321a",
       "StackId": "arn:aws:cloudformation:eu-west-3:715841358596:stack/amplify-bookwebsite-staging-5321a/af142ba0-fcf0-11ef-b7f3-06ff908276f9",
       "AmplifyAppId": "d3rfhmj1ubtbh2"
+    },
+    "categories": {
+      "auth": {
+        "bookwebsite": {}
+      }
     }
   }
 }

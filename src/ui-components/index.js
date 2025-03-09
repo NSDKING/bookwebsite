@@ -6,12 +6,8 @@
 
 export { default as AgendasCreateForm } from "./AgendasCreateForm";
 export { default as AgendasUpdateForm } from "./AgendasUpdateForm";
-export { default as ArticlesCreateForm } from "./ArticlesCreateForm";
-export { default as ArticlesUpdateForm } from "./ArticlesUpdateForm";
 export { default as MessagesCreateForm } from "./MessagesCreateForm";
 export { default as MessagesUpdateForm } from "./MessagesUpdateForm";
-export { default as ParagraphesCreateForm } from "./ParagraphesCreateForm";
-export { default as ParagraphesUpdateForm } from "./ParagraphesUpdateForm";
 export { default as UserCreateForm } from "./UserCreateForm";
 export { default as UserUpdateForm } from "./UserUpdateForm";
 export { default as studioTheme } from "./studioTheme";

@@ -9,6 +9,10 @@ export const getUser = /* GraphQL */ `
       editor
       admin
       logid
+      Articles {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -120,6 +124,7 @@ export const getParagraphes = /* GraphQL */ `
         nextToken
         __typename
       }
+      articlesID
       createdAt
       updatedAt
       __typename
@@ -138,6 +143,37 @@ export const listParagraphes = /* GraphQL */ `
         text
         title
         order
+        articlesID
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const paragraphesByArticlesID = /* GraphQL */ `
+  query ParagraphesByArticlesID(
+    $articlesID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelParagraphesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    paragraphesByArticlesID(
+      articlesID: $articlesID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        text
+        title
+        order
+        articlesID
         createdAt
         updatedAt
         __typename
@@ -258,6 +294,11 @@ export const getArticles = /* GraphQL */ `
         nextToken
         __typename
       }
+      userID
+      Paragraphes {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
@@ -276,6 +317,37 @@ export const listArticles = /* GraphQL */ `
         titles
         rubrique
         caroussel
+        userID
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const articlesByUserID = /* GraphQL */ `
+  query ArticlesByUserID(
+    $userID: ID!
+    $sortDirection: ModelSortDirection
+    $filter: ModelArticlesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    articlesByUserID(
+      userID: $userID
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        titles
+        rubrique
+        caroussel
+        userID
         createdAt
         updatedAt
         __typename
