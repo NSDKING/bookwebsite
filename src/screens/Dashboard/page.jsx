@@ -6,6 +6,8 @@ import Modal from '../../components/AddArticleModal/index';
 import EditModal from '../../components/EditModal';
 import { generateClient } from 'aws-amplify/api';
 import { getCurrentUser } from 'aws-amplify/auth';
+import CircularProgress from '@mui/material/CircularProgress';
+import { deleteArticles, createArticles, updateArticles } from '../../graphql/mutations';
  
 export default function Dashboard() {
   const [articles, setArticles] = useState([]);
@@ -16,16 +18,20 @@ export default function Dashboard() {
   const [alert, setAlert] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState('');
+  const [loading, setLoading] = useState(true);
   const client = generateClient();
  
   // Fetch articles from the backend
   const fetchArticles = async () => {
+    setLoading(true);
     try {
       const listArticlesResponse = await client.graphql({ query: listArticlesWithDetails });
       setArticles(listArticlesResponse.data.listArticles.items);
       console.log(listArticlesResponse.data.listArticles.items);
     } catch (error) {
       console.error("Error fetching articles:", error);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -50,50 +56,61 @@ export default function Dashboard() {
 
   const handleAddArticle = async (newArticle) => {
     try {
-      const response = await fetch('/api/articles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...newArticle, userId }),
+      // Use GraphQL createArticles mutation instead of REST API
+      const response = await client.graphql({
+        query: createArticles,
+        variables: {
+          input: { 
+            ...newArticle, 
+            userID: userId 
+          }
+        }
       });
       
-      if (response.ok) {
-        const addedArticle = await response.json();
+      const addedArticle = response.data.createArticles;
+      if (addedArticle) {
         setArticles([...articles, addedArticle]);
         setIsModalOpen(false);
-        showAlert('Article added successfully', 'success');
+        showAlert('Article ajouté avec succès', 'success');
       } else {
-        showAlert('Failed to add article', 'error');
+        showAlert('Échec de l\'ajout de l\'article', 'error');
       }
     } catch (error) {
       console.error('Error adding article:', error);
-      showAlert('Error adding article', 'error');
+      showAlert('Erreur lors de l\'ajout de l\'article', 'error');
     }
   };
 
   const handleEditArticle = async (updatedArticle) => {
     try {
-      const response = await fetch(`/api/articles/${updatedArticle.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...updatedArticle, userId }),
+      // Use GraphQL updateArticles mutation instead of REST API
+      const response = await client.graphql({
+        query: updateArticles,
+        variables: {
+          input: { 
+            id: updatedArticle.id,
+            titles: updatedArticle.titles,
+            rubrique: updatedArticle.rubrique,
+            caroussel: updatedArticle.caroussel,
+            userID: userId
+            // Add other fields that need to be updated
+          }
+        }
       });
       
-      if (response.ok) {
+      const updatedArticleResponse = response.data.updateArticles;
+      if (updatedArticleResponse) {
         setArticles(articles.map(article => 
-          article.id === updatedArticle.id ? updatedArticle : article
+          article.id === updatedArticle.id ? updatedArticleResponse : article
         ));
         setIsEditModalOpen(false);
-        showAlert('Article updated successfully', 'success');
+        showAlert('Article mis à jour avec succès', 'success');
       } else {
-        showAlert('Failed to update article', 'error');
+        showAlert('Échec de la mise à jour de l\'article', 'error');
       }
     } catch (error) {
       console.error('Error updating article:', error);
-      showAlert('Error updating article', 'error');
+      showAlert('Erreur lors de la mise à jour de l\'article', 'error');
     }
   };
    
@@ -103,29 +120,29 @@ export default function Dashboard() {
   };
 
   const handleDeleteArticle = async (articleId) => {
-    if (!isAdmin) {
-      showAlert('Only administrators can delete articles', 'error');
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
       return;
     }
-
-    if (!window.confirm('Are you sure you want to delete this article?')) {
-      return;
-    }
-
+  
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
-        method: 'DELETE',
+      // Use the deleteArticles mutation from your GraphQL schema
+      const deleteResponse = await client.graphql({
+        query: deleteArticles,
+        variables: {
+          input: { id: articleId }
+        }
       });
-      
-      if (response.ok) {
+  
+      if (deleteResponse.data.deleteArticles) {
+        // Update local state to remove the deleted article
         setArticles(articles.filter(article => article.id !== articleId));
-        showAlert('Article deleted successfully', 'success');
+        showAlert('Article supprimé avec succès', 'success');
       } else {
-        showAlert('Failed to delete article', 'error');
+        showAlert('Échec de la suppression de l\'article', 'error');
       }
     } catch (error) {
       console.error('Error deleting article:', error);
-      showAlert('Error deleting article', 'error');
+      showAlert('Erreur lors de la suppression de l\'article', 'error');
     }
   };
 
@@ -140,7 +157,26 @@ export default function Dashboard() {
       const sortedParagraphs = [...article.Paragraphes.items].sort((a, b) => a.order - b.order);
       return sortedParagraphs[0].text?.substring(0, 100) + "...";
     }
-    return "No content available...";
+    return "Aucun contenu disponible...";
+  };
+
+  // Get the direct image from the article
+  const getDirectImage = (article) => {
+    // Get images directly attached to the article (not in paragraphs)
+    if (article.Images?.items && article.Images.items.length > 0) {
+      // Sort by positions if available
+      const sortedImages = [...article.Images.items].sort((a, b) => {
+        if (a.positions && b.positions) {
+          return a.positions - b.positions;
+        }
+        return 0; // Keep original order if positions not available
+      });
+      
+      return sortedImages[0].link;
+    }
+    
+    // Return a placeholder if no direct image is found
+    return "https://via.placeholder.com/300x200?text=Aucune+Image";
   };
 
   return (
@@ -151,7 +187,7 @@ export default function Dashboard() {
           <input 
             type="text" 
             className="search-input" 
-            placeholder="Search articles..." 
+            placeholder="Rechercher des articles..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -159,7 +195,7 @@ export default function Dashboard() {
             className="add-button" 
             onClick={() => setIsModalOpen(true)}
           >
-            Add New Article
+            Ajouter un nouvel article
           </button>
         </div>
 
@@ -169,40 +205,56 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="articles-grid">
-          {filteredArticles.length > 0 ? (
-            filteredArticles.map(article => (
-              <div className="article-card" key={article.id}>
-                {/* Fixed property names to match GraphQL schema */}
-                <h3 className="article-title">{article.titles}</h3>
-                <p className="article-excerpt">{getExcerpt(article)}</p>
-                <div className="article-footer">
-                  <span className="article-date">
-                    {new Date(article.createdAt).toLocaleDateString()}
-                  </span>
-                  <div className="article-actions">
-                    <button 
-                      className="edit-button" 
-                      onClick={() => handleEditClick(article)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="delete-button" 
-                      onClick={() => handleDeleteArticle(article.id)}
-                    >
-                      Delete
-                    </button>
+        {loading ? (
+          <div className="loading-container">
+            <CircularProgress />
+          </div>
+        ) : (
+          <div className="articles-grid">
+            {filteredArticles.length > 0 ? (
+              filteredArticles.map(article => (
+                <div className="article-card" key={article.id}>
+                  {/* Article Image - Using only direct images */}
+                  <div className="article-image-container">
+                    <img 
+                      src={getDirectImage(article)} 
+                      alt={article.titles || "Image de l'article"} 
+                      className="article-image"
+                    />
+                  </div>
+                  
+                  {/* Article Content */}
+                  <h3 className="article-title">{article.titles}</h3>
+                  <p className="article-excerpt">{getExcerpt(article)}</p>
+                  
+                  <div className="article-footer">
+                    <span className="article-date">
+                      {new Date(article.createdAt).toLocaleDateString()}
+                    </span>
+                    <div className="article-actions">
+                      <button 
+                        className="edit-button" 
+                        onClick={() => handleEditClick(article)}
+                      >
+                        Modifier
+                      </button>
+                      <button 
+                        className="delete-button" 
+                        onClick={() => handleDeleteArticle(article.id)}
+                      >
+                        Supprimer
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="no-articles">
+                {search ? 'Aucun article ne correspond à votre recherche' : 'Aucun article disponible'}
               </div>
-            ))
-          ) : (
-            <div className="no-articles">
-              {search ? 'No articles match your search' : 'No articles available'}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {isModalOpen && (
