@@ -1,0 +1,22 @@
+.header-title {
+    font-size: 1.5rem; /* Reduced font size for mobile */
+    font-weight: bold; /* Bold text for emphasis */
+    color: #333; /* Dark color for readability */
+    text-align: center; /* Center the header */
+    margin: 15px 0; /* Margin for spacing */
+    text-transform: uppercase; /* Uppercase for a professional look */
+    letter-spacing: 0.5px; /* Slightly increase letter spacing */
+    font-family: 'Georgia', serif; /* Use a serif font for a classic look */
+    border-bottom: 2px solid #ccc; /* Add a bottom border for separation */
+    padding-bottom: 8px; /* Padding below the text */
+    margin-bottom: 35px;
+}
+
+.card-container {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack cards vertically */
+    align-items: center; /* Center align cards */
+    margin-top: 20px; /* Space above the card section */
+}
+
+ 

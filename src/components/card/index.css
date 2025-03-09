@@ -1,0 +1,43 @@
+.card {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Center items vertically */
+    border: 1px solid #ccc; /* Light border for the card */
+    border-radius: 8px; /* Rounded corners */
+    padding: 15px; /* Padding inside the card */
+    margin: 10px 0; /* Margin between cards */
+    background-color: #fff; /* White background for the card */
+}
+
+.card-content {
+    display: flex; /* Use flexbox for content layout */
+    width: 100%; /* Full width */
+}
+
+.card-text {
+    flex: 1; /* Take remaining space */
+    padding-right: 15px; /* Space between text and image */
+}
+
+.card-title {
+    font-size: 1.5em; /* Title font size */
+    margin: 0; /* Remove default margin */
+}
+
+.card-author,
+.card-date {
+    font-size: 0.9em; /* Smaller font size for author and date */
+    color: #555; /* Darker gray for better readability */
+}
+
+.card-image {
+    width: 100px;
+    height: 100px; 
+    overflow: hidden; 
+    border-radius: 5px; 
+}
+
+.card-image img {
+    width: 100%; /* Make image fill the container */
+    height: 100%; /* Make image fill the container */
+    object-fit: cover; /* Cover the area without distortion */
+}

@@ -1,0 +1,48 @@
+type User @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  editor: Boolean
+  admin: Boolean
+  logid: String
+}
+
+type Agendas @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  date: String
+  description: String
+  image: String
+}
+
+type Messages @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  mail: String
+  name: String
+  message: String
+  numero: String
+}
+
+type Paragraphes @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  text: String
+  title: String
+  order: String
+  Images: [Images] @hasMany(indexName: "byParagraphes", fields: ["id"])
+}
+
+type Images @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  link: String
+  description: String
+  positions: String
+  articlesID: ID! @index(name: "byArticles")
+  paragraphesID: ID! @index(name: "byParagraphes")
+}
+
+type Articles @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  titles: String
+  rubrique: String
+  caroussel: Boolean
+  Images: [Images] @hasMany(indexName: "byArticles", fields: ["id"])
+} 
