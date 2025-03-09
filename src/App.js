@@ -5,6 +5,7 @@ import Home from './screens/Home';
 import Discovery from './screens/Discovery';
 import Dashboard from './screens/Dashboard/page';
 import LoginPage from './screens/Login/page';
+import ArticlePage from './screens/Article/page'; // Import the new Article page
 import ProtectedRoute from './components/ProctectdRoute';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { useEffect, useState } from 'react';
@@ -12,7 +13,6 @@ import { createUser } from './graphql/mutations';
 import { listUsers } from './graphql/queries';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/api';
-
 
 Amplify.configure(config);
 
@@ -33,14 +33,12 @@ function App() {
 
         const existingUser = listUsersResponse.data.listUsers.items.find(user => user.logid === userId);
         if (!existingUser) {
-      
           await client.graphql({
             query: createUser,
             variables: {
               input: { logid: userId },
             },
           });
-   
         }
       }
     } catch (error) {
@@ -53,28 +51,27 @@ function App() {
   useEffect(() => {
     isUserAuth();
   }, []);
-
   
   return (
     <div className="App">
-        <Authenticator.Provider>
-          <Router>
-            <Routes>
-
-              <Route path="/" element={<Home />} />
-              <Route path="/discovery" element={<Discovery />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              /> 
-            </Routes>
-          </Router>
-        </Authenticator.Provider>
+      <Authenticator.Provider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/discovery" element={<Discovery />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/article/:id" element={<ArticlePage />} /> {/* New dynamic article route */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </Authenticator.Provider>
     </div>
   );
 }
