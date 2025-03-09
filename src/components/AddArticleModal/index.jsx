@@ -27,13 +27,11 @@ const Modal = ({ onClose, onSubmit, userId }) => {
     console.log(userId)
   }, [userId]);
 
-  // Function to compress image to target size
+  // Function to compress image to a target size
   const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
     return new Promise((resolve) => {
-      // Create an image element to load the base64 string
       const img = new Image();
       img.src = base64String;
-      
       img.onload = () => {
         // Create a canvas to draw and compress the image
         const canvas = document.createElement('canvas');
@@ -81,7 +79,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
         // Try compression with binary search for optimal quality between 0.1 and 0.9
         let compressed = compressWithQuality(0.1, 0.9);
         let compressedSize = (compressed.length * 0.75) / 1024;
-        
+
         // If we couldn't get it small enough with quality adjustment,
         // reduce dimensions and try again
         if (compressedSize > targetSizeKB) {

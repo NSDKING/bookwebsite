@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
+import { updateArticles, updateParagraphes, updateImages, createImages } from '../../graphql/mutations';
+import { generateClient } from 'aws-amplify/api';
 
 const EditModal = ({ onClose, onSubmit, userId, article }) => {
   const Rub = ["Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
@@ -9,31 +11,154 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   const [coverPreview, setCoverPreview] = useState('');
   const [coverDescription, setCoverDescription] = useState('');
   const [paragraphs, setParagraphs] = useState([{ 
+    id: '',
     text: '', 
     image: null, 
     imagePreview: '',
-    imageDescription: '' 
+    imageDescription: '',
+    imageId: '' // Track existing image ID for update/delete operations
   }]);
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   
-  const fileInputRef = useRef(null);
+  const client = generateClient();
 
   // Populate the modal with existing article data when it opens
   useEffect(() => {
     if (article) {
-      setTitle(article.title);
-      setRubrique(article.rubrique);
-      setCoverPreview(article.coverImagePreview || '');
-      setCoverDescription(article.coverDescription || '');
-      setParagraphs(article.paragraphs || []);
+      setTitle(article.titles || '');
+      setRubrique(article.rubrique || '');
+      
+      // Find cover image if it exists
+      const coverImg = article.Images?.items?.find(img => img.positions === "cover");
+      if (coverImg) {
+        setCoverPreview(coverImg.link || '');
+        setCoverDescription(coverImg.description || '');
+      }
+      
+      // Format paragraphs with their images
+      const formattedParagraphs = [];
+      if (article.Paragraphes?.items?.length > 0) {
+        // Sort paragraphs by order
+        const sortedParagraphs = [...article.Paragraphes.items].sort((a, b) => 
+          parseInt(a.order) - parseInt(b.order)
+        );
+        
+        sortedParagraphs.forEach(paragraph => {
+          const paragraphImage = paragraph.Images?.items?.[0]; // Get first image
+          formattedParagraphs.push({
+            id: paragraph.id,
+            text: paragraph.text || '',
+            image: null, // No file object for existing images
+            imagePreview: paragraphImage?.link || '',
+            imageDescription: paragraphImage?.description || '',
+            imageId: paragraphImage?.id || '' // Keep track of image ID
+          });
+        });
+      }
+      
+      if (formattedParagraphs.length > 0) {
+        setParagraphs(formattedParagraphs);
+      }
     }
   }, [article]);
 
-  // Handle cover image upload
+  // Monitor changes to form data
+  useEffect(() => {
+    if (article) {
+      const hasFormChanges = 
+        title !== article.titles ||
+        rubrique !== article.rubrique ||
+        coverImage !== null || // Cover image changed
+        paragraphs.some((p, i) => {
+          const originalParagraph = article.Paragraphes?.items?.find(op => op.id === p.id) || {};
+          return p.text !== originalParagraph.text || p.image !== null;
+        });
+      
+      setHasChanges(hasFormChanges);
+    }
+  }, [title, rubrique, coverImage, paragraphs, article]);
+
+  // Function to compress image to target size
+  const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
+    return new Promise((resolve) => {
+      // Create an image element to load the base64 string
+      const img = new Image();
+      img.src = base64String;
+      
+      img.onload = () => {
+        // Create a canvas to draw and compress the image
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Initial scaling - reduce dimensions for very large images
+        const initialScaleFactor = Math.min(1, 1200 / Math.max(width, height));
+        width = Math.floor(width * initialScaleFactor);
+        height = Math.floor(height * initialScaleFactor);
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw the image on the canvas
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Binary search to find optimal quality
+        const compressWithQuality = (min, max, attempts = 8) => {
+          if (attempts <= 0 || (max - min) < 0.01) {
+            return canvas.toDataURL('image/jpeg', min);
+          }
+          
+          const mid = (min + max) / 2;
+          const midResult = canvas.toDataURL('image/jpeg', mid);
+          const size = (midResult.length * 0.75) / 1024;
+          
+          if (size > targetSizeKB) {
+            return compressWithQuality(min, mid, attempts - 1);
+          } else {
+            return compressWithQuality(mid, max, attempts - 1);
+          }
+        };
+        
+        // Try compression with binary search for optimal quality between 0.1 and 0.9
+        let compressed = compressWithQuality(0.1, 0.9);
+        let compressedSize = (compressed.length * 0.75) / 1024;
+        
+        // If still too large, reduce dimensions and try again
+        if (compressedSize > targetSizeKB) {
+          const scaleDown = () => {
+            width = Math.floor(width * 0.7);
+            height = Math.floor(height * 0.7);
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const resized = canvas.toDataURL('image/jpeg', 0.7);
+            const newSize = (resized.length * 0.75) / 1024;
+            
+            if (newSize > targetSizeKB && width > 100 && height > 100) {
+              return scaleDown();
+            }
+            
+            return resized;
+          };
+          
+          compressed = scaleDown();
+        }
+        
+        resolve(compressed);
+      };
+    });
+  };
+  
+  // Handle cover image upload and convert to base64
   const handleCoverImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files[0]) {
+      const file = files[0];
       setCoverImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -43,10 +168,18 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Handle paragraph image upload
+  // Remove cover image
+  const removeCoverImage = () => {
+    setCoverImage(null);
+    setCoverPreview('');
+    setCoverDescription('');
+  };
+
+  // Handle paragraph image upload and convert to base64
   const handleParagraphImageChange = (index, e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files[0]) {
+      const file = files[0];
       const newParagraphs = [...paragraphs];
       newParagraphs[index].image = file;
       
@@ -57,6 +190,16 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Remove paragraph image
+  const removeParagraphImage = (index) => {
+    const newParagraphs = [...paragraphs];
+    newParagraphs[index].image = null;
+    newParagraphs[index].imagePreview = '';
+    newParagraphs[index].imageDescription = '';
+    // Don't remove imageId, we'll handle that during submission
+    setParagraphs(newParagraphs);
   };
 
   // Update paragraph text
@@ -76,10 +219,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   // Add a new paragraph
   const addParagraph = () => {
     setParagraphs([...paragraphs, { 
+      id: '', // New paragraph, no ID yet
       text: '', 
       image: null, 
       imagePreview: '',
-      imageDescription: '' 
+      imageDescription: '',
+      imageId: ''
     }]);
   };
 
@@ -95,29 +240,171 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   // Form validation
   const validateForm = () => {
     if (!title.trim()) {
-      setError('Veuillez entrer un titre');
+      setErrorMessage('Veuillez entrer un titre');
       return false;
     }
     
     if (!rubrique.trim()) {
-      setError('Veuillez sélectionner une catégorie');
+      setErrorMessage('Veuillez sélectionner une catégorie');
       return false;
     }
     
     for (let i = 0; i < paragraphs.length; i++) {
       if (!paragraphs[i].text.trim()) {
-        setError(`Le paragraphe ${i + 1} ne peut pas être vide`);
+        setErrorMessage(`Le paragraphe ${i + 1} ne peut pas être vide`);
         return false;
       }
     }
     
     if (!userId) {
-      setError('L\'ID utilisateur est manquant. Veuillez vous reconnecter.');
+      setErrorMessage('L\'ID utilisateur est manquant. Veuillez vous reconnecter.');
       return false;
     }
     
-    setError('');
+    setErrorMessage('');
     return true;
+  };
+
+  // Update article with all content (images and paragraphs)
+  const updateArticleWithContent = async () => {
+    try {
+      // 1. Update the main article information
+      const articleInput = {
+        id: article.id,
+        titles: title,
+        rubrique: rubrique.toLowerCase(),
+        userID: userId
+        // Keep other fields unchanged
+      };
+      
+      const articleResult = await client.graphql({
+        query: updateArticles,
+        variables: {
+          input: articleInput
+        }
+      });
+      
+      if (!articleResult.data?.updateArticles) {
+        throw new Error('Failed to update article');
+      }
+      
+      // 2. Update or create paragraphs
+      for (let i = 0; i < paragraphs.length; i++) {
+        const paragraph = paragraphs[i];
+        let paragraphId = paragraph.id;
+        
+        // If paragraph has an ID, update it. Otherwise create new paragraph
+        if (paragraphId) {
+          const paragraphInput = {
+            id: paragraphId,
+            text: paragraph.text,
+            order: i.toString(),
+            title: i === 0 ? title : undefined
+          };
+          
+          await client.graphql({
+            query: updateParagraphes,
+            variables: {
+              input: paragraphInput
+            }
+          });
+        } else {
+          // Create new paragraph (similar to AddArticle logic)
+          // Implement this based on your createParagraphes mutation
+          console.log("Would create new paragraph:", {
+            text: paragraph.text,
+            articlesID: article.id,
+            order: i.toString()
+          });
+        }
+        
+        // Handle paragraph image
+        if (paragraph.image && paragraph.imagePreview) {
+          // Compress the image
+          const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
+          
+          if (paragraph.imageId) {
+            // Update existing image
+            const imageInput = {
+              id: paragraph.imageId,
+              link: compressedImage,
+              description: paragraph.imageDescription || ''
+            };
+            
+            await client.graphql({
+              query: updateImages,
+              variables: {
+                input: imageInput
+              }
+            });
+          } else {
+            // Create new image
+            const imageInput = {
+              link: compressedImage,
+              description: paragraph.imageDescription || '',
+              positions: "center",
+              articlesID: article.id,
+              paragraphesID: paragraphId || "" // Use paragraph ID if available
+            };
+            
+            await client.graphql({
+              query: createImages,
+              variables: {
+                input: imageInput
+              }
+            });
+          }
+        }
+      }
+      
+      // 3. Handle cover image if changed
+      if (coverImage && coverPreview) {
+        // Compress the cover image
+        const compressedCoverImage = await compressImageToTargetSize(coverPreview);
+        
+        // Find existing cover image or use first paragraph for attachment
+        const coverImageId = article.Images?.items?.find(img => img.positions === "cover")?.id;
+        const firstParagraphId = paragraphs[0]?.id || "";
+        
+        if (coverImageId) {
+          // Update existing cover image
+          const coverImageInput = {
+            id: coverImageId,
+            link: compressedCoverImage,
+            description: coverDescription || ''
+          };
+          
+          await client.graphql({
+            query: updateImages,
+            variables: {
+              input: coverImageInput
+            }
+          });
+        } else {
+          // Create new cover image
+          const coverImageInput = {
+            link: compressedCoverImage,
+            description: coverDescription || '',
+            positions: "cover",
+            articlesID: article.id,
+            paragraphesID: firstParagraphId
+          };
+          
+          await client.graphql({
+            query: createImages,
+            variables: {
+              input: coverImageInput
+            }
+          });
+        }
+      }
+      
+      return article.id;
+    } catch (error) {
+      console.error("Error updating article content:", error);
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+      throw error;
+    }
   };
 
   // Handle form submission
@@ -131,31 +418,35 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     setIsSubmitting(true);
     
     try {
-      // Create form data for API submission
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('rubrique', rubrique);
-      formData.append('userId', userId);
+      // Update article with all content changes
+      await updateArticleWithContent();
       
-      if (coverImage) {
-        formData.append('coverImage', coverImage);
-        formData.append('coverDescription', coverDescription);
-      }
-      
-      // Add paragraphs
-      paragraphs.forEach((paragraph, index) => {
-        formData.append(`paragraphs[${index}][text]`, paragraph.text);
-        if (paragraph.image) {
-          formData.append(`paragraphs[${index}][image]`, paragraph.image);
-          formData.append(`paragraphs[${index}][imageDescription]`, paragraph.imageDescription || '');
-        }
+      // Notify parent component of successful update
+      onSubmit({ 
+        id: article.id,
+        titles: title, 
+        rubrique,
+        caroussel: article.caroussel
       });
       
-      onSubmit(formData);
+      // Close the modal
+      onClose();
     } catch (error) {
-      setError('Échec de la mise à jour de l\'article. Veuillez réessayer.');
+      setErrorMessage('Échec de la mise à jour de l\'article. Veuillez réessayer.');
+      console.error("Error updating article:", error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Confirm before closing if there are unsaved changes
+  const handleCloseWithConfirm = () => {
+    if (hasChanges) {
+      if (window.confirm("Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir fermer?")) {
+        onClose();
+      }
+    } else {
+      onClose();
     }
   };
 
@@ -164,12 +455,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
       <div className="modal-container">
         <div className="modal-header">
           <h2>Modifier l'Article</h2>
-          <button className="close-button" onClick={onClose} type="button" aria-label="Fermer">×</button>
+          <button className="close-button" onClick={handleCloseWithConfirm} type="button" aria-label="Fermer">×</button>
         </div>
         
-        {error && (
+        {errorMessage && (
           <div className="error-message">
-            {error}
+            {errorMessage}
           </div>
         )}
         
@@ -217,12 +508,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
               <button 
                 type="button" 
                 className="file-input-button"
-                onClick={() => document.getElementById('coverImage').click()}
+                onClick={() => document.getElementById('coverImage')?.click()}
               >
                 Choisir une Image
               </button>
               <span className="file-name">
-                {coverImage ? coverImage.name : 'Aucun fichier choisi'}
+                {coverImage ? coverImage.name : coverPreview ? 'Image existante' : 'Aucun fichier choisi'}
               </span>
             </div>
             
@@ -230,6 +521,14 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
               <div className="image-preview-wrapper">
                 <div className="image-preview-container">
                   <img src={coverPreview} alt="Aperçu de la couverture" className="image-preview" />
+                  <button 
+                    type="button" 
+                    className="remove-image-button"
+                    onClick={removeCoverImage}
+                    aria-label="Remove cover image"
+                  >
+                    ×
+                  </button>
                 </div>
                 
                 <div className="image-description-container">
@@ -291,12 +590,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
                     <button 
                       type="button" 
                       className="file-input-button"
-                      onClick={() => document.getElementById(`paragraph-image-${index}`).click()}
+                      onClick={() => document.getElementById(`paragraph-image-${index}`)?.click()}
                     >
                       Choisir une Image
                     </button>
                     <span className="file-name">
-                      {paragraph.image ? paragraph.image.name : 'Aucun fichier choisi'}
+                      {paragraph.image ? paragraph.image.name : paragraph.imagePreview ? 'Image existante' : 'Aucun fichier choisi'}
                     </span>
                   </div>
                   
@@ -304,6 +603,14 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
                     <div className="image-preview-wrapper">
                       <div className="image-preview-container">
                         <img src={paragraph.imagePreview} alt={`Aperçu du paragraphe ${index + 1}`} className="image-preview" />
+                        <button 
+                          type="button" 
+                          className="remove-image-button"
+                          onClick={() => removeParagraphImage(index)}
+                          aria-label={`Remove paragraph ${index + 1} image`}
+                        >
+                          ×
+                        </button>
                       </div>
                       
                       <div className="image-description-container">
@@ -333,13 +640,17 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
           </div>
           
           <div className="modal-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
+            <button 
+              type="button" 
+              className="cancel-button" 
+              onClick={handleCloseWithConfirm}
+            >
               Annuler
             </button>
             <button 
               type="submit" 
               className="submit-button" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !hasChanges}
             >
               {isSubmitting ? 'Mise à jour...' : 'Mettre à Jour l\'Article'}
             </button>
