@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './index.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const Carousel = ({ datas }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,8 +26,11 @@ const Carousel = ({ datas }) => {
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options).replace(',', '');
+    return new Date(dateString).toLocaleDateString('fr-FR', options).replace(',', '');
   };
+
+  // Get current article data
+  const currentArticle = datas[currentIndex] || {};
 
   return (
     <div className="carousel">
@@ -43,20 +47,23 @@ const Carousel = ({ datas }) => {
       </div>
 
       <div className={`carousel-content ${animationClass}`} onAnimationEnd={() => setAnimationClass("")}>
-        <img 
-          src={datas[currentIndex].image} 
-          alt={`Slide ${currentIndex}`} 
-          className="carousel-image" 
+        <img
+          src={currentArticle.image}
+          alt={`Slide ${currentIndex}`}
+          className="carousel-image"
           layout="responsive"
           width={500}
           height={300}
         />
-        <h3 className="carousel-title">{datas[currentIndex].title}</h3>
+        <h3 className="carousel-title">{currentArticle.title}</h3>
         <div className="text-area">
-          <p className="carousel-author">{datas[currentIndex].author}</p>
-          <p className="carousel-date">{formatDate(datas[currentIndex].date)}</p>
+          <p className="carousel-author">{currentArticle.author}</p>
+          <p className="carousel-date">{formatDate(currentArticle.date)}</p>
         </div>
-        <a href="#">Lire maintenant</a>
+        {/* Use Link component for proper navigation */}
+        <Link to={`/article/${currentArticle.id}`} className="read-now-link">
+          Lire maintenant
+        </Link>
       </div>
     </div>
   );
