@@ -7,6 +7,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   const Rub = ["Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
   const [title, setTitle] = useState('');
   const [rubrique, setRubrique] = useState('');
+  const [caroussel, setCaroussel] = useState(false); // Add state for carousel checkbox
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [coverDescription, setCoverDescription] = useState('');
@@ -29,6 +30,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     if (article) {
       setTitle(article.titles || '');
       setRubrique(article.rubrique || '');
+      setCaroussel(article.caroussel || false); // Set carousel state from article data
       
       // Find cover image if it exists
       const coverImg = article.Images?.items?.find(img => img.positions === "cover");
@@ -70,6 +72,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
       const hasFormChanges = 
         title !== article.titles ||
         rubrique !== article.rubrique ||
+        caroussel !== article.caroussel || // Check for carousel changes
         coverImage !== null || // Cover image changed
         paragraphs.some((p, i) => {
           const originalParagraph = article.Paragraphes?.items?.find(op => op.id === p.id) || {};
@@ -78,7 +81,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
       
       setHasChanges(hasFormChanges);
     }
-  }, [title, rubrique, coverImage, paragraphs, article]);
+  }, [title, rubrique, caroussel, coverImage, paragraphs, article]); // Add caroussel to dependency array
 
   // Function to compress image to target size
   const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
@@ -237,6 +240,11 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
+  // Toggle carousel checkbox
+  const handleCarouselChange = (e) => {
+    setCaroussel(e.target.checked);
+  };
+
   // Form validation
   const validateForm = () => {
     if (!title.trim()) {
@@ -273,6 +281,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
         id: article.id,
         titles: title,
         rubrique: rubrique.toLowerCase(),
+        caroussel: caroussel, // Include carousel status in update
         userID: userId
         // Keep other fields unchanged
       };
@@ -426,7 +435,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
         id: article.id,
         titles: title, 
         rubrique,
-        caroussel: article.caroussel
+        caroussel: caroussel // Include updated carousel status in result
       });
       
       // Close the modal
@@ -492,6 +501,17 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
                 <option key={index} value={item.toLowerCase()}>{item}</option>
               ))}
             </select>
+          </div>
+          
+          {/* Carousel Checkbox */}
+          <div className="form-group checkbox-group">
+            <input
+              type="checkbox"
+              id="caroussel"
+              checked={caroussel}
+              onChange={handleCarouselChange}
+            />
+            <label htmlFor="caroussel">Afficher dans le carrousel</label>
           </div>
           
           {/* Cover Image */}

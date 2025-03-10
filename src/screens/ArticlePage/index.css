@@ -1,222 +1,351 @@
-/* Base styles */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: sans-serif;
-    color: #1a202c;
-  }
-  
-  /* Main container */
-  .article-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: #f9fafb;
-  }
-  
-  /* Content container */
-  .content-wrapper {
-    max-width: 48rem; /* 3xl in Tailwind */
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 6rem;
-    width: 100%;
-  }
-  
-  /* Header title */
-  .header-title {
-    text-align: center;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1f2937;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-family: Georgia, serif;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #d1d5db;
-    margin-bottom: 2rem;
-  }
-  
-  /* Article styles */
-  .article {
-    width: 100%;
-  }
-  
-  .article-image-container {
-    width: 100%;
-  }
-  
-  .article-image {
-    width: 100%;
-    height: 16rem; /* h-64 in Tailwind */
-    object-fit: cover;
-    border-radius: 0.25rem;
-  }
-  
-  .article-content {
-    width: 100%;
-    padding-top: 1.25rem;
-    padding-bottom: 1.25rem;
-  }
-  
-  .article-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .article-meta {
-    display: flex;
+/* ArticlePage.css */
+
+/* Main container */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Content container */
+.content-container {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 6rem;
+  width: 100%;
+}
+
+/* Site header */
+.site-header {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: serif;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #d1d5db;
+  margin-bottom: 2rem;
+}
+
+/* Article container */
+.article-container {
+  width: 100%;
+}
+
+/* Featured image */
+.featured-image-container {
+  width: 100%;
+}
+
+.featured-image {
+  width: 100%;
+  height: 16rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+/* Article content */
+.article-content {
+  width: 100%;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.article-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.article-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.article-author, .article-date {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.article-separator {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+.article-text {
+  margin-top: 1.25rem;
+  line-height: 1.625;
+}
+
+.article-paragraph {
+  margin-bottom: 1rem;
+}
+
+.continue-button {
+  display: inline-block;
+  margin-top: 1rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border: 2px solid #1f2937;
+  color: #1f2937;
+  font-weight: 700;
+  border-radius: 0.25rem;
+  transition-property: color, background-color, transform, border-color;
+  transition-duration: 300ms;
+  cursor: pointer;
+}
+
+.continue-button:hover {
+  border-color: #000000;
+  color: #000000;
+  transform: translateY(-0.25rem);
+}
+
+/* Related articles */
+.related-articles-section {
+  margin-top: 2.5rem;
+}
+
+.related-header {
+  font-weight: 700;
+  color: #111827;
+  font-family: serif;
+  margin-bottom: 1rem;
+}
+
+.related-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .related-grid {
     flex-direction: row;
-    align-items: flex-start;
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
-  
-  .article-author, .article-date-separator, .article-date {
-    font-size: 0.875rem;
-    color: #4b5563;
+}
+
+.related-card {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+@media (min-width: 768px) {
+  .related-card {
+    width: calc(50% - 0.625rem);
   }
-  
-  .article-date-separator {
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
-  }
-  
-  .article-body {
-    margin-top: 1.25rem;
-    line-height: 1.625;
-  }
-  
-  .article-paragraph {
-    margin-bottom: 1rem;
-  }
-  
-  .continue-reading-button {
-    display: inline-block;
-    margin-top: 1rem;
-    padding: 1.25rem 1.25rem;
-    border: 2px solid #1f2937;
-    color: #1f2937;
-    font-weight: 700;
-    border-radius: 0.25rem;
-    transition-property: color, border-color, transform;
-    transition-duration: 0.3s;
-    cursor: pointer;
-    background-color: transparent;
-    text-decoration: none;
-  }
-  
-  .continue-reading-button:hover {
-    border-color: #000000;
-    color: #000000;
-    transform: translateY(-0.25rem);
-  }
-  
-  /* Related articles section */
-  .related-articles {
-    margin-top: 2.5rem;
-  }
-  
-  .related-title {
-    font-weight: 700;
-    color: #111827;
-    font-family: Georgia, serif;
-    margin-bottom: 1rem;
-  }
-  
-  .related-articles-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-  
-  .article-card {
-    width: 100%;
-    background-color: #ffffff;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  }
-  
-  .article-card-image {
-    width: 100%;
-    height: 11rem; /* h-44 in Tailwind */
-    object-fit: cover;
-  }
-  
-  .article-card-content {
-    padding: 1rem;
-  }
-  
-  .article-card-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  
-  .article-card-meta {
-    font-size: 0.75rem;
-    color: #4b5563;
-  }
-  
-  /* Bottom Navigation */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: #ffffff;
-    border-top: 1px solid #d1d5db;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-    z-index: 10;
-  }
-  
-  .bottom-nav-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
-  
-  .bottom-nav-button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #1f2937;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .bottom-nav-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .bottom-nav-label {
-    font-size: 0.875rem;
-  }
-  
-  .bottom-nav-label.active {
-    font-weight: 500;
-  }
-  
-  /* Media Queries */
-  @media (min-width: 768px) {
-    .related-articles-container {
-      flex-direction: row;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
-    
-    .article-card {
-      width: calc(5/12 * 100%); /* md:w-5/12 in Tailwind */
-    }
-  }
+}
+
+.related-image {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+}
+
+.related-content {
+  padding: 1rem;
+}
+
+.related-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.related-meta {
+  font-size: 0.75rem;
+  color: #4b5563;
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border-top: 1px solid #d1d5db;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  z-index: 10;
+}
+
+.tabs-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.tab-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1f2937;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.tab-label {
+  font-size: 0.875rem;
+}
+
+.tab-active {
+  font-weight: 500;
+}
+
+/* Loading spinner */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* New CircularProgress loading containers */
+.loading-content-container, 
+.loading-image-container, 
+.loading-title, 
+.loading-meta, 
+.loading-related-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  width: 100%;
+}
+
+.loading-image-container {
+  min-height: 250px;
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+}
+
+.loading-related-container {
+  min-height: 200px;
+  padding: 2rem 0;
+}
+
+.loading-title {
+  height: 2rem;
+  margin: 0.5rem 0;
+}
+
+.loading-meta {
+  height: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.loading-text {
+  margin-top: 0.5rem;
+}
+
+/* Add these styles to your index.css file */
+
+/* Featured image wrapper - contains image and description */
+.featured-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.image-container {
+  width: 100%;
+}
+
+.featured-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Featured image description wrapper - adds space between image and description */
+.featured-image-description-wrapper {
+  margin-top: 12px;  /* Space between image and description */
+  padding: 0 8px;
+}
+
+/* Paragraph image container */
+.paragraph-image-container {
+  display: flex;
+  flex-direction: column;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.image-wrapper {
+  width: 100%;
+}
+
+.paragraph-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Image description styling */
+.image-description-wrapper {
+  margin-top: 12px;  /* Space between image and description */
+  padding: 0 8px;
+}
+
+.image-description {
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+  line-height: 1.4;
+}

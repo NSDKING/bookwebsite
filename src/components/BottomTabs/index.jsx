@@ -12,15 +12,15 @@ export default function BottomTab() {
 
   return (
     <div className="bottom-tab">
-      <Link href="/" className={`tab-item `}>
+      <Link to="/" className={`tab-item `}>
         <FontAwesomeIcon icon={solidHome } className="tab-icon" />
         <span>Accueil</span>
       </Link>
-      <Link href="/discovery" className={`tab-item `}>
+      <Link to="/discovery" className={`tab-item `}>
         <FontAwesomeIcon icon={ solidCompass  } className="tab-icon" />
         <span>Découverte</span>
       </Link>
-      <Link href="/contact" className={`tab-item`}>
+      <Link to="/contact" className={`tab-item`}>
       <FontAwesomeIcon icon={faInfoCircle} className="tab-icon" />
       <span>Contact</span>
       </Link>

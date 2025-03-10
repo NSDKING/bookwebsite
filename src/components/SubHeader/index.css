@@ -1,61 +1,80 @@
-.header {
-    display: flex;
-    justify-content: center;
-    background: white;
-    padding: 10px 0;
-    border: none;
-  }
-  .header li{
-    border: none;
-  }
-  
-  .nav-scroll-container {
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
-    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
-  }
-  
-  .nav-scroll-container::-webkit-scrollbar {
-    display: none; /* Hide scrollbar for Chrome/Safari */
-  }
-  
-  .nav-list {
-    display: flex;
-    position: relative;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-bottom: 2px solid #ddd;
-    min-width: max-content; /* Allow content to extend beyond container */
-  }
-  
-  .nav-item {
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.3s ease-in-out;
-    flex-shrink: 0;
-  }
-  
-  .nav-item:hover {
-    color: #222;
-  }
-  
-  .underline {
-    position: absolute;
-    bottom: -2px;
-    height: 3px;
-    background-color: black;
-    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
-  }
+.subheader {
+  display: flex;
+  justify-content: center;
+  background: white;
+  padding: 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
-.subheader-title{
-    font-weight: bold; 
-    color: #1d1d1d;
-    font-family: 'Georgia', serif;  
-    margin: 0;
+.subheader-scroll-container {
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 1200px;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.subheader-scroll-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.subheader-nav-list {
+  display: flex;
+  position: relative;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-bottom: 2px solid #eaeaea;
+  min-width: max-content; /* Allow content to extend beyond container */
+}
+
+.subheader-nav-item {
+  padding: 10px 24px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.subheader-nav-item:hover .subheader-title {
+  color: #000;
+}
+
+.subheader-nav-item.active .subheader-title {
+  color: #000;
+}
+
+.subheader-title {
+  font-weight: 600;
+  color: #555;
+  font-family: 'Georgia', serif;
+  margin: 0;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.subheader-underline {
+  position: absolute;
+  bottom: -2px;
+  height: 3px;
+  background-color: #000;
+  transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .subheader-nav-item {
+    padding: 8px 16px;
+  }
+  
+  .subheader-title {
+    font-size: 14px;
+  }
 }

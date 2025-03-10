@@ -421,3 +421,49 @@
     padding: 8px;
   }
 }
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin-right: 8px;
+}
+/* Add these styles to your existing CSS file */
+
+.featured-image-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.paragraph-image-container {
+  margin: 1rem 0;
+}
+
+.paragraph-image {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+  max-height: 300px;
+}
+
+.image-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.article-paragraph-container {
+  margin-bottom: 1.5rem;
+}

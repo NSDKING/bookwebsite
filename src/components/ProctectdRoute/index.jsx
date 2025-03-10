@@ -6,7 +6,6 @@ import "./index.css"
 
 const ProtectedRoute = ({ children }) => {
   const { authStatus } = useAuthenticator(context => [context.authStatus]);
-  
   // Check if authStatus is still configuring
   if (authStatus === 'configuring') {
     return (

@@ -192,3 +192,21 @@
       font-size: 16px;
     }
   }
+
+  /* Checkbox styling */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 10px;
+  width: auto;
+  height: auto;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+  cursor: pointer;
+}

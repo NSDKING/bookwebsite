@@ -19,6 +19,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
   }]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCarousel, setIsCarousel] = useState(false); // New state for carousel option
   
   const fileInputRef = useRef(null);
   const client = generateClient();
@@ -134,7 +135,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
         titles: title,
         userID: userId,
         rubrique: rubrique.toLowerCase(),
-        caroussel: false
+        caroussel: isCarousel // Use the carousel state value
       };
       
       // Create the article
@@ -370,7 +371,8 @@ const Modal = ({ onClose, onSubmit, userId }) => {
         id: articleId,
         title, 
         rubrique,
-        coverImage: coverPreview ? true : false
+        coverImage: coverPreview ? true : false,
+        carousel: isCarousel // Include carousel status in the submission
       });
       
       // Close the modal
@@ -425,6 +427,19 @@ const Modal = ({ onClose, onSubmit, userId }) => {
                 <option key={index} value={item.toLowerCase()}>{item}</option>
               ))}
             </select>
+          </div>
+          
+          {/* Carousel Option */}
+          <div className="form-group checkbox-group">
+            <label htmlFor="carousel" className="checkbox-label">
+              <input
+                type="checkbox"
+                id="carousel"
+                checked={isCarousel}
+                onChange={(e) => setIsCarousel(e.target.checked)}
+              />
+              Ajouter au carousel de la page d'accueil
+            </label>
           </div>
           
           {/* Cover Image */}

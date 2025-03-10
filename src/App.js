@@ -5,7 +5,6 @@ import Home from './screens/Home';
 import Discovery from './screens/Discovery';
 import Dashboard from './screens/Dashboard/page';
 import LoginPage from './screens/Login/page';
-import ArticlePage from './screens/Article/page'; // Import the new Article page
 import ProtectedRoute from './components/ProctectdRoute';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { useEffect, useState } from 'react';
@@ -13,6 +12,8 @@ import { createUser } from './graphql/mutations';
 import { listUsers } from './graphql/queries';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/api';
+import ArticlePage from './screens/ArticlePage/page';
+import ContactPage from './screens/Contact';
 
 Amplify.configure(config);
 
@@ -60,6 +61,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/discovery" element={<Discovery />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/article/:id" element={<ArticlePage />} /> {/* New dynamic article route */}
             <Route
               path="/dashboard"

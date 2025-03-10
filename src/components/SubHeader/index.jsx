@@ -1,14 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
-import "./index.css"
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import "./index.css";
 
-const SubHeader = ({activeIndex, setActiveIndex}) => {
+const SubHeader = ({ activeIndex, setActiveIndex }) => {
   const [underlineStyle, setUnderlineStyle] = useState({});
   const navRefs = useRef([]);
   const scrollContainerRef = useRef(null);
 
-  const navItems = ["Tous","Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
+  const navItems = ["Tous", "Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
 
-  useEffect(() => {
+  // Memoize the update function to prevent unnecessary re-renders
+  const updateUnderline = useCallback(() => {
     if (navRefs.current[activeIndex]) {
       const { offsetLeft, offsetWidth } = navRefs.current[activeIndex];
       setUnderlineStyle({ left: offsetLeft, width: offsetWidth });
@@ -23,27 +24,32 @@ const SubHeader = ({activeIndex, setActiveIndex}) => {
     }
   }, [activeIndex]);
 
+  // Update underline on activeIndex change and window resize
+  useEffect(() => {
+    updateUnderline();
+    window.addEventListener("resize", updateUnderline);
+    return () => window.removeEventListener("resize", updateUnderline);
+  }, [activeIndex, updateUnderline]);
 
   return (
-    <nav className="header">
-      <div className="nav-scroll-container" ref={scrollContainerRef}>
-        <ul className="nav-list">
+    <nav className="subheader">
+      <div className="subheader-scroll-container" ref={scrollContainerRef}>
+        <ul className="subheader-nav-list">
           {navItems.map((item, index) => (
             <li
               key={index}
               ref={(el) => (navRefs.current[index] = el)}
-              className={`nav-item ${activeIndex === index ? "active" : ""}`}
+              className={`subheader-nav-item ${activeIndex === index ? "active" : ""}`}
               onClick={() => setActiveIndex(index)}
             >
               <h3 className="subheader-title">{item}</h3>
             </li>
           ))}
-          <div className="underline" style={underlineStyle}></div>
+          <div className="subheader-underline" style={underlineStyle}></div>
         </ul>
       </div>
     </nav>
   );
 };
 
-
-export default SubHeader
+export default SubHeader;

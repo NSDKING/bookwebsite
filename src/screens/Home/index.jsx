@@ -8,8 +8,7 @@ import BottomTab from '../../components/BottomTabs';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { generateClient } from 'aws-amplify/api';
 import CircularProgress from '@mui/material/CircularProgress';
-import { listArticlesWithDetails } from '../../graphql/queries'; // Import your GraphQL query
-
+ 
 const Home = () => {
   const [articles, setArticles] = useState([]);
   const [filteredArticles, setFilteredArticles] = useState([]);
@@ -30,6 +29,7 @@ const Home = () => {
       });
       const fetchedArticles = response.data.listArticles.items;
       setArticles(fetchedArticles);
+      console.log(fetchedArticles)
       setFilteredArticles(fetchedArticles);
     } catch (error) {
       console.error("Error fetching articles:", error);
@@ -49,9 +49,9 @@ const Home = () => {
       setFilteredArticles(articles);
     } else {
       // Filter by the selected category
-      const category = navItems[activeIndex];
+      const category = navItems[activeIndex].toLowerCase();
       const filtered = articles.filter(article => 
-        article.rubrique === category
+        article.rubrique.toLowerCase() === category
       );
       setFilteredArticles(filtered);
     }
@@ -69,9 +69,9 @@ const Home = () => {
       if (activeIndex === 0) {
         setFilteredArticles(articles);
       } else {
-        const category = navItems[activeIndex];
+        const category = navItems[activeIndex].toLowerCase();
         const filtered = articles.filter(article => 
-          article.rubrique === category
+          article.rubrique.toLowerCase() === category
         );
         setFilteredArticles(filtered);
       }
@@ -85,7 +85,7 @@ const Home = () => {
       .map(article => ({
         title: article.titles || "",
         image: getArticleImage(article),
-        author: article.userID || "Auteur inconnu",
+        author: "Junior housein",
         date: article.createdAt || new Date().toISOString(),
         type: article.rubrique || "Actualité",
         id: article.id
@@ -126,9 +126,7 @@ const Home = () => {
   return (
     <main>
       <h1 className="header-title">laLecturejecontribue</h1>
-      
-      <SearchBar onSearch={handleSearch} />
-      
+            
       {loading ? (
         <div className="loading-container">
           <CircularProgress />
@@ -154,7 +152,7 @@ const Home = () => {
                     id: article.id,
                     image: getArticleImage(article),
                     title: article.titles || "Sans titre",
-                    author: article.userID || "Auteur inconnu",
+                    author:  "junior Houssin",
                     date: article.createdAt || new Date().toISOString(),
                     excerpt: getExcerpt(article),
                     type: article.rubrique || "Actualité"
@@ -176,3 +174,54 @@ const Home = () => {
 };
 
 export default Home;
+
+
+export const listArticlesWithDetails = /* GraphQL */ `
+  query ListArticlesWithDetails(
+    $filter: ModelArticlesFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listArticles(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        titles
+        rubrique
+        caroussel
+        userID
+        createdAt
+        updatedAt
+        Images {
+          items {
+            id
+            link
+            paragraphesID
+            positions
+          }
+        }
+        Paragraphes {
+          items {
+            id
+            articlesID
+            order
+            text
+            title
+            Images {
+              items {
+                id
+                link
+                description
+                paragraphesID
+                positions
+                createdAt
+              }
+            }
+          }
+        }
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
