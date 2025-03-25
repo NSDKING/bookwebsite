@@ -15,6 +15,7 @@ import { generateClient } from 'aws-amplify/api';
 import ArticlePage from './screens/ArticlePage/page';
 import ContactPage from './screens/Contact';
 import MessagesPage from './screens/Dashboard/message/page';
+import NotReadyYet from './screens/Dashboard/NotReady/page';
 
 Amplify.configure(config);
 
@@ -63,6 +64,8 @@ function App() {
             <Route path="/discovery" element={<Discovery />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/dashboard/carousel" element={<NotReadyYet />} />
+            <Route path="/dashboard/agenda" element={<NotReadyYet />} />
             <Route path="/article/:id" element={<ArticlePage />} /> {/* New dynamic article route */}
             <Route
               path="/dashboard"
