@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <header className="header">
       <div className="logo">
-        <Link href="/" className="logo-link">
+        <Link to="/dashboard" className="logo-link">
           <div className="logo-icon">
             <span>L</span>
           </div>
@@ -46,10 +46,10 @@ export default function Header() {
       {/* Desktop navigation */}
       <nav className="desktop-nav">
         <ul className="nav-list">
-          <li><Link href="/dashboard" className="nav-link">Accueil</Link></li>
-          <li><Link href="/dashboard/caroussel" className="nav-link">Caroussel</Link></li>
-          <li><Link href="/dashboard/agenda" className="nav-link">Agenda</Link></li>
-          <li><Link href="/dashboard/message" className="nav-link">Message</Link></li>
+          <li><Link to="/dashboard" className="nav-link">Accueil</Link></li>
+          <li><Link to="/dashboard/caroussel" className="nav-link">Caroussel</Link></li>
+          <li><Link to="/dashboard/agenda" className="nav-link">Agenda</Link></li>
+          <li><Link to="/dashboard/message" className="nav-link">Message</Link></li>
         </ul>
       </nav>
 
@@ -58,10 +58,10 @@ export default function Header() {
         <div className="mobile-nav">
           <nav>
             <ul className="mobile-nav-list">
-              <li><Link href="/dashboard" className="nav-link" onClick={toggleMenu}>Accueil</Link></li>
-              <li><Link href="/dashboard/caroussel" className="nav-link" onClick={toggleMenu}>Caroussel</Link></li>
-              <li><Link href="/dashboard/agenda" className="nav-link" onClick={toggleMenu}>Agenda</Link></li>
-              <li><Link href="/dashboard/message" className="nav-link" onClick={toggleMenu}>Message</Link></li>
+              <li><Link to="/dashboard" className="nav-link" onClick={toggleMenu}>Accueil</Link></li>
+              <li><Link to="/dashboard/caroussel" className="nav-link" onClick={toggleMenu}>Caroussel</Link></li>
+              <li><Link to="/dashboard/agenda" className="nav-link" onClick={toggleMenu}>Agenda</Link></li>
+              <li><Link to="/dashboard/message" className="nav-link" onClick={toggleMenu}>Message</Link></li>
             </ul>
           </nav>
         </div>

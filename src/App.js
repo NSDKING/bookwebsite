@@ -14,6 +14,7 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/api';
 import ArticlePage from './screens/ArticlePage/page';
 import ContactPage from './screens/Contact';
+import MessagesPage from './screens/Dashboard/message/page';
 
 Amplify.configure(config);
 
@@ -71,7 +72,17 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/dashboard/message"
+              element={
+                <ProtectedRoute>
+                  <MessagesPage />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
+
+          
         </Router>
       </Authenticator.Provider>
     </div>
