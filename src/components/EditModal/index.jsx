@@ -81,7 +81,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
       
       setHasChanges(hasFormChanges);
     }
-  }, [title, rubrique, caroussel, coverImage, paragraphs, article]); // Add caroussel to dependency array
+  }, [title, rubrique, caroussel, coverImage, paragraphs, article]); // Add caroussel to dependency array²
 
   // Function to compress image to target size
   const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
@@ -243,6 +243,11 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   // Toggle carousel checkbox
   const handleCarouselChange = (e) => {
     setCaroussel(e.target.checked);
+  };
+
+  // Add a new function to handle cover image description change
+  const handleCoverImageDescriptionChange = (e) => {
+    setCoverDescription(e.target.value);
   };
 
   // Form validation
@@ -557,7 +562,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
                     type="text"
                     id="coverDescription"
                     value={coverDescription}
-                    onChange={(e) => setCoverDescription(e.target.value)}
+                    onChange={handleCoverImageDescriptionChange}
                     placeholder="Ajoutez une description ou légende pour cette image"
                     className="image-description-input"
                   />

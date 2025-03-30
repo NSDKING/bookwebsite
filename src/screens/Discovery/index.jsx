@@ -105,7 +105,7 @@ const Discovery = () => {
                     id: article.id,
                     image: getArticleImage(article),
                     title: article.titles || "Sans titre",
-                    author: "Junior Houssin",
+                    author: "JUNIOR HAUSSIN",
                     date: article.createdAt || new Date().toISOString(),
                     excerpt: getExcerpt(article),
                     type: article.rubrique || "Actualité"

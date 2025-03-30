@@ -85,7 +85,7 @@ const Home = () => {
       .map(article => ({
         title: article.titles || "",
         image: getArticleImage(article),
-        author: "Junior housein",
+        author: "JUNIOR HAUSSIN",
         date: article.createdAt || new Date().toISOString(),
         type: article.rubrique || "Actualité",
         id: article.id
@@ -152,7 +152,7 @@ const Home = () => {
                     id: article.id,
                     image: getArticleImage(article),
                     title: article.titles || "Sans titre",
-                    author:  "junior Houssin",
+                    author:  "JUNIOR HAUSSIN",
                     date: article.createdAt || new Date().toISOString(),
                     excerpt: getExcerpt(article),
                     type: article.rubrique || "Actualité"

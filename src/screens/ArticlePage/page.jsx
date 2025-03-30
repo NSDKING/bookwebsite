@@ -163,7 +163,7 @@ const ArticlePage = () => {
   
   // Get author name (default to "Junior Hussain" if userID is not available)
   const getAuthorName = (userID) => {
-    return "Junior Hussain";
+    return "JUNIOR HAUSSIN";
   };
   
   // Render error message
