@@ -125,124 +125,144 @@ const Modal = ({ onClose, onSubmit, userId }) => {
   // Improved function to create an article with paragraphs and images using GraphQL mutations
   const createArticleWithContent = async () => {
     try {
-      // Check if client is properly initialized
-      if (!client) {
-        throw new Error('AWS client not properly initialized');
-      }
-      
-      console.log(isCarousel)
-      // 1. Create the Article first using GraphQL mutation
-      const articleInput = {
-        titles: title,
-        userID: userId,
-        rubrique: rubrique.toLowerCase(),
+        if (!client) {
+            throw new Error('AWS client not properly initialized');
+        }
 
-      };
-      
-      // Create the article
-      const articleResult = await client.graphql({
-        query: createArticles,
-        variables: {
-          input: articleInput
-        }
-      });
-      
-      if (!articleResult.data?.createArticles) {
-        throw new Error('Failed to create article');
-      }
-      
-      const articleId = articleResult.data.createArticles.id;
-      console.log(articleId)
-      console.log("articleId"+articleId)
-      let paragraphIds = [];
-      
-      // 2. Create each paragraph and its images
-      for (let i = 0; i < paragraphs.length; i++) {
-        const paragraph = paragraphs[i];
-        
-        // Create the paragraph using GraphQL mutation
-        const paragraphInput = {
-          text: paragraph.text,
-          articlesID: articleId,
-          order: i.toString(),
-          title: i === 0 ? title : undefined // Only set title for the first paragraph
+        console.log(isCarousel);
+
+        const articleInput = {
+            titles: title,
+            userID: userId,
+            rubrique: rubrique.toLowerCase(),
         };
-        
-        const paragraphResult = await client.graphql({
-          query: createParagraphes,
-          variables: {
-            input: paragraphInput
-          }
+
+        const articleResult = await client.graphql({
+            query: createArticles,
+            variables: { input: articleInput }
         });
-        
-        if (!paragraphResult.data?.createParagraphes) {
-          throw new Error('Failed to create paragraph');
+
+        if (!articleResult.data?.createArticles) {
+            throw new Error('Failed to create article');
         }
-        
-        const paragraphId = paragraphResult.data.createParagraphes.id;
-        paragraphIds.push(paragraphId);
-        
-        // If this paragraph has an image, compress and create the image record
-        if (paragraph.image && paragraph.imagePreview) {
-          try {
-            // Compress the image to target size
-            const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
-            
-            const imageInput = {
-              link: compressedImage,
-              description: paragraph.imageDescription || '',
-              positions: "center",
-              articlesID: articleId,
-              paragraphesID: paragraphId
+
+        const articleId = articleResult.data.createArticles.id;
+        console.log("articleId" + articleId);
+        let paragraphIds = [];
+        let uploadedImages = [];
+
+        for (let i = 0; i < paragraphs.length; i++) {
+            const paragraph = paragraphs[i];
+            const paragraphInput = {
+                text: paragraph.text,
+                articlesID: articleId,
+                order: i.toString(),
+                title: i === 0 ? title : undefined
             };
-            
-            await client.graphql({
-              query: createImages,
-              variables: {
-                input: imageInput
-              }
+
+            const paragraphResult = await client.graphql({
+                query: createParagraphes,
+                variables: { input: paragraphInput }
             });
-          } catch (error) {
-            console.error(`Error processing image for paragraph ${i}:`, error);
-            setErrorMessage(`Erreur lors du traitement de l'image du paragraphe ${i+1}`);
-          }
-        }
-      }
-      
-      // 3. If there's a cover image, compress and create it associated with the article
-      if (coverImage && coverPreview) {
-        try {
-          // Compress the cover image to target size
-          const compressedCoverImage = await compressImageToTargetSize(coverPreview);
-          
-          // Use the first paragraph ID for the cover image
-          const coverImageInput = {
-            link: compressedCoverImage,
-            description: coverDescription || '',
-            positions: "cover",
-            articlesID: articleId,
-           };
-          
-          const response = await client.graphql({
-            query: createImages,
-            variables: {
-              input: coverImageInput
+
+            if (!paragraphResult.data?.createParagraphes) {
+                throw new Error('Failed to create paragraph');
             }
-          });
-          console.log(response)
-        } catch (error) {
-          console.error("Error processing cover image:", error);
-          setErrorMessage("Erreur lors du traitement de l'image de couverture");
+
+            const paragraphId = paragraphResult.data.createParagraphes.id;
+            paragraphIds.push(paragraphId);
+
+            if (paragraph.image && paragraph.imagePreview) {
+                try {
+                    const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
+                    const imageInput = {
+                        link: compressedImage,
+                        description: paragraph.imageDescription || '',
+                        positions: "center",
+                        articlesID: articleId,
+                        paragraphesID: paragraphId
+                    };
+
+                    const imageResponse = await client.graphql({
+                        query: createImages,
+                        variables: { input: imageInput }
+                    });
+
+                    if (imageResponse.data?.createImages) {
+                        uploadedImages.push(imageResponse.data.createImages);
+                    }
+                } catch (error) {
+                    console.error(`Error processing image for paragraph ${i}:`, error);
+                    setErrorMessage(`Erreur lors du traitement de l'image du paragraphe ${i + 1}`);
+                }
+            }
         }
-      }
-      
-      console.log("Article, paragraphs, and images created successfully");
-       return articleId;
-      
+
+        if (coverImage && coverPreview) {
+            try {
+                const compressedCoverImage = await compressImageToTargetSize(coverPreview);
+                const coverImageInput = {
+                    link: compressedCoverImage,
+                    description: coverDescription || '',
+                    positions: "cover",
+                    articlesID: articleId,
+                };
+
+                const coverImageResponse = await client.graphql({
+                    query: createImages,
+                    variables: { input: coverImageInput }
+                });
+
+                if (coverImageResponse.data?.createImages) {
+                    uploadedImages.push(coverImageResponse.data.createImages);
+                }
+            } catch (error) {
+                console.error("Error processing cover image:", error);
+                setErrorMessage("Erreur lors du traitement de l'image de couverture");
+            }
+        }
+
+        console.log("Article, paragraphs, and images created successfully");
+
+        const formattedArticle = {
+            id: articleId,
+            titles: title,
+            rubrique: rubrique,
+            caroussel: null,
+            userID: userId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            Images: {
+                items: uploadedImages.map(image => ({
+                    id: image.id,
+                    link: image.link,
+                    description: image.description,
+                    paragraphesID: image.paragraphesID || null,
+                    positions: image.positions || "cover",
+                    createdAt: new Date().toISOString()
+                }))
+            },
+            Paragraphes: {
+                items: paragraphs.map((paragraph, index) => ({
+                    id: paragraphIds[index]  ,  
+                    articlesID: articleId,
+                    order: paragraph.order ? paragraph.order.toString() : index.toString(), // Ensure order is a string
+                    text: paragraph.text,
+                    title: paragraph.title,
+                    Images: { 
+                        items: uploadedImages.filter(img => img.paragraphesID === paragraphIds[index]) 
+                    }
+                }))
+            }
+            
+            
+        };
+
+        return formattedArticle;
     } catch (error) {
-      console.error("Error creating article content:", error);
-      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
-      throw error;
+        console.error("Error creating article content:", error);
+        setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred');
+        throw error;
     }
   };
 
@@ -367,16 +387,10 @@ const Modal = ({ onClose, onSubmit, userId }) => {
     
     try {
       // Create article in the database using GraphQL mutations
-      const articleId = await createArticleWithContent();
+      const articleData = await createArticleWithContent();
       
       // Notify parent component of successful submission
-      onSubmit({ 
-        id: articleId,
-        title, 
-        rubrique,
-        coverImage: coverPreview ? true : false,
-        carousel: isCarousel // Include carousel status in the submission
-      });
+      onSubmit(articleData);
       
       // Close the modal
       onClose();

@@ -67,25 +67,32 @@ export default function Dashboard() {
       showAlert('Erreur lors de l\'ajout de l\'article', 'error');
     }
   };
-
+  
   const handleEditArticle = async (updatedArticle) => {
     try {
-    
-
-       if (updatedArticle) {
-        setArticles(articles.map(article => 
-          article.id === updatedArticle.id && updatedArticle
-        ));
-        setIsEditModalOpen(false);
-        showAlert('Article mis à jour avec succès', 'success');
-      } else {
-        showAlert('Échec de la mise à jour de l\'article', 'error');
+      if (!updatedArticle || !updatedArticle.id) {
+        throw new Error("L'article mis à jour est invalide.");
       }
+  
+      setLoading(true); // Optional: If you have a loading state
+  
+      setArticles(prevArticles => 
+        prevArticles.map(article => 
+          article.id === updatedArticle.id ? updatedArticle : article
+        )
+      );
+  
+      setIsEditModalOpen(false);
+      showAlert('Article mis à jour avec succès', 'success');
+  
     } catch (error) {
       console.error('Error updating article:', error);
       showAlert('Erreur lors de la mise à jour de l\'article', 'error');
+    } finally {
+      setLoading(false); // Optional: Stop loading if used
     }
   };
+  
    
   const handleEditClick = (article) => {
     setCurrentArticle(article);
