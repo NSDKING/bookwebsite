@@ -6,6 +6,8 @@
 
 export { default as AgendasCreateForm } from "./AgendasCreateForm";
 export { default as AgendasUpdateForm } from "./AgendasUpdateForm";
+export { default as ImagesCreateForm } from "./ImagesCreateForm";
+export { default as ImagesUpdateForm } from "./ImagesUpdateForm";
 export { default as MessagesCreateForm } from "./MessagesCreateForm";
 export { default as MessagesUpdateForm } from "./MessagesUpdateForm";
 export { default as UserCreateForm } from "./UserCreateForm";

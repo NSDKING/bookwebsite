@@ -7,7 +7,7 @@ import EditModal from '../../components/EditModal';
 import { generateClient } from 'aws-amplify/api';
 import { getCurrentUser } from 'aws-amplify/auth';
 import CircularProgress from '@mui/material/CircularProgress';
-import { deleteArticles, createArticles, updateArticles } from '../../graphql/mutations';
+import { deleteArticles } from '../../graphql/mutations';
  
 export default function Dashboard() {
   const [articles, setArticles] = useState([]);
@@ -54,27 +54,14 @@ export default function Dashboard() {
     setTimeout(() => setAlert(null), 3000);
   };
 
-  const handleAddArticle = async (newArticle) => {
+  const handleAddArticle =  (newArticle) => {
     try {
-      // Use GraphQL createArticles mutation instead of REST API
-      const response = await client.graphql({
-        query: createArticles,
-        variables: {
-          input: { 
-            ...newArticle, 
-            userID: userId 
-          }
-        }
-      });
+       console.log(newArticle)
       
-      const addedArticle = response.data.createArticles;
-      if (addedArticle) {
-        setArticles([...articles, addedArticle]);
+        setArticles([...articles, newArticle]);
         setIsModalOpen(false);
         showAlert('Article ajouté avec succès', 'success');
-      } else {
-        showAlert('Échec de l\'ajout de l\'article', 'error');
-      }
+      
     } catch (error) {
       console.error('Error adding article:', error);
       showAlert('Erreur lors de l\'ajout de l\'article', 'error');
@@ -83,25 +70,11 @@ export default function Dashboard() {
 
   const handleEditArticle = async (updatedArticle) => {
     try {
-      // Use GraphQL updateArticles mutation instead of REST API
-      const response = await client.graphql({
-        query: updateArticles,
-        variables: {
-          input: { 
-            id: updatedArticle.id,
-            titles: updatedArticle.titles,
-            rubrique: updatedArticle.rubrique,
-            caroussel: updatedArticle.caroussel,
-            userID: userId
-            // Add other fields that need to be updated
-          }
-        }
-      });
-      
-      const updatedArticleResponse = response.data.updateArticles;
-      if (updatedArticleResponse) {
+    
+
+       if (updatedArticle) {
         setArticles(articles.map(article => 
-          article.id === updatedArticle.id ? updatedArticleResponse : article
+          article.id === updatedArticle.id && updatedArticle
         ));
         setIsEditModalOpen(false);
         showAlert('Article mis à jour avec succès', 'success');
@@ -294,10 +267,12 @@ export const listArticlesWithDetails = /* GraphQL */ `
         updatedAt
         Images {
           items {
-            id
-            link
-            paragraphesID
-            positions
+                id
+                link
+                description
+                paragraphesID
+                positions
+                createdAt
           }
         }
         Paragraphes {

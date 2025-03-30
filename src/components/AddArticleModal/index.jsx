@@ -129,13 +129,14 @@ const Modal = ({ onClose, onSubmit, userId }) => {
       if (!client) {
         throw new Error('AWS client not properly initialized');
       }
- 
+      
+      console.log(isCarousel)
       // 1. Create the Article first using GraphQL mutation
       const articleInput = {
         titles: title,
         userID: userId,
         rubrique: rubrique.toLowerCase(),
-        caroussel: isCarousel // Use the carousel state value
+
       };
       
       // Create the article
@@ -151,6 +152,8 @@ const Modal = ({ onClose, onSubmit, userId }) => {
       }
       
       const articleId = articleResult.data.createArticles.id;
+      console.log(articleId)
+      console.log("articleId"+articleId)
       let paragraphIds = [];
       
       // 2. Create each paragraph and its images
@@ -218,15 +221,15 @@ const Modal = ({ onClose, onSubmit, userId }) => {
             description: coverDescription || '',
             positions: "cover",
             articlesID: articleId,
-            paragraphesID: paragraphIds[0] || "" // Use the first paragraph ID or empty string
-          };
+           };
           
-          await client.graphql({
+          const response = await client.graphql({
             query: createImages,
             variables: {
               input: coverImageInput
             }
           });
+          console.log(response)
         } catch (error) {
           console.error("Error processing cover image:", error);
           setErrorMessage("Erreur lors du traitement de l'image de couverture");
@@ -234,7 +237,7 @@ const Modal = ({ onClose, onSubmit, userId }) => {
       }
       
       console.log("Article, paragraphs, and images created successfully");
-      return articleId;
+       return articleId;
       
     } catch (error) {
       console.error("Error creating article content:", error);
@@ -593,3 +596,6 @@ const Modal = ({ onClose, onSubmit, userId }) => {
 };
 
 export default Modal;
+
+
+

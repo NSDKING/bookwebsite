@@ -37,8 +37,8 @@ type Images @model @auth(rules: [{allow: public}]) {
   link: String
   description: String
   positions: String
-  articlesID: ID! @index(name: "byArticles")
-  paragraphesID: ID! @index(name: "byParagraphes")
+  articlesID: ID @index(name: "byArticles")
+  paragraphesID: ID @index(name: "byParagraphes")
 }
 
 type Articles @model @auth(rules: [{allow: public}]) {

@@ -7,7 +7,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   const Rub = ["Actualité", "Nouveauté", "Portrait", "Chronique", "Agenda"];
   const [title, setTitle] = useState('');
   const [rubrique, setRubrique] = useState('');
-  const [caroussel, setCaroussel] = useState(false); // Add state for carousel checkbox
+  const [caroussel, setCaroussel] = useState(false);
   const [coverImage, setCoverImage] = useState(null);
   const [coverPreview, setCoverPreview] = useState('');
   const [coverDescription, setCoverDescription] = useState('');
@@ -17,11 +17,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     image: null, 
     imagePreview: '',
     imageDescription: '',
-    imageId: '' // Track existing image ID for update/delete operations
+    imageId: ''
   }]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [Back, setBack]=useState()
   
   const client = generateClient();
 
@@ -30,12 +31,15 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     if (article) {
       setTitle(article.titles || '');
       setRubrique(article.rubrique || '');
-      setCaroussel(article.caroussel || false); // Set carousel state from article data
+      setCaroussel(article.caroussel || false);
       
       // Find cover image if it exists
       const coverImg = article.Images?.items?.find(img => img.positions === "cover");
+      console.log(coverImg)
+      console.log(article.Images)
       if (coverImg) {
         setCoverPreview(coverImg.link || '');
+        // Fix: Correctly set the cover description from the existing image
         setCoverDescription(coverImg.description || '');
       }
       
@@ -54,8 +58,9 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
             text: paragraph.text || '',
             image: null, // No file object for existing images
             imagePreview: paragraphImage?.link || '',
+            // Fix: Correctly set the image description from the existing paragraph image
             imageDescription: paragraphImage?.description || '',
-            imageId: paragraphImage?.id || '' // Keep track of image ID
+            imageId: paragraphImage?.id || ''
           });
         });
       }
@@ -69,21 +74,28 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
   // Monitor changes to form data
   useEffect(() => {
     if (article) {
+      const coverImg = article.Images?.items?.find(img => img.positions === "cover");
+      const originalCoverDesc = coverImg?.description || '';
+      
       const hasFormChanges = 
         title !== article.titles ||
         rubrique !== article.rubrique ||
-        caroussel !== article.caroussel || // Check for carousel changes
-        coverImage !== null || // Cover image changed
+        caroussel !== article.caroussel ||
+        coverImage !== null ||
+        coverDescription !== originalCoverDesc ||
         paragraphs.some((p, i) => {
           const originalParagraph = article.Paragraphes?.items?.find(op => op.id === p.id) || {};
-          return p.text !== originalParagraph.text || p.image !== null;
+          const originalImage = originalParagraph.Images?.items?.[0] || {};
+          return p.text !== originalParagraph.text || 
+                p.image !== null || 
+                p.imageDescription !== originalImage.description;
         });
       
       setHasChanges(hasFormChanges);
     }
-  }, [title, rubrique, caroussel, coverImage, paragraphs, article]); // Add caroussel to dependency array²
+  }, [title, rubrique, caroussel, coverImage, coverDescription, paragraphs, article]);
 
-  // Function to compress image to target size
+  // Function to compress image to target size (unchanged)
   const compressImageToTargetSize = (base64String, targetSizeKB = 390) => {
     return new Promise((resolve) => {
       // Create an image element to load the base64 string
@@ -157,7 +169,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     });
   };
   
-  // Handle cover image upload and convert to base64
+  // Handle functions remain the same
   const handleCoverImageChange = (e) => {
     const files = e.target.files;
     if (files && files[0]) {
@@ -171,14 +183,12 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Remove cover image
   const removeCoverImage = () => {
     setCoverImage(null);
     setCoverPreview('');
     setCoverDescription('');
   };
 
-  // Handle paragraph image upload and convert to base64
   const handleParagraphImageChange = (index, e) => {
     const files = e.target.files;
     if (files && files[0]) {
@@ -195,34 +205,29 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Remove paragraph image
   const removeParagraphImage = (index) => {
     const newParagraphs = [...paragraphs];
     newParagraphs[index].image = null;
     newParagraphs[index].imagePreview = '';
     newParagraphs[index].imageDescription = '';
-    // Don't remove imageId, we'll handle that during submission
     setParagraphs(newParagraphs);
   };
 
-  // Update paragraph text
   const handleParagraphTextChange = (index, e) => {
     const newParagraphs = [...paragraphs];
     newParagraphs[index].text = e.target.value;
     setParagraphs(newParagraphs);
   };
 
-  // Update paragraph image description
   const handleParagraphImageDescriptionChange = (index, e) => {
     const newParagraphs = [...paragraphs];
     newParagraphs[index].imageDescription = e.target.value;
     setParagraphs(newParagraphs);
   };
 
-  // Add a new paragraph
   const addParagraph = () => {
     setParagraphs([...paragraphs, { 
-      id: '', // New paragraph, no ID yet
+      id: '',
       text: '', 
       image: null, 
       imagePreview: '',
@@ -231,7 +236,6 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }]);
   };
 
-  // Remove a paragraph
   const removeParagraph = (index) => {
     if (paragraphs.length > 1) {
       const newParagraphs = [...paragraphs];
@@ -240,17 +244,16 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Toggle carousel checkbox
   const handleCarouselChange = (e) => {
     setCaroussel(e.target.checked);
   };
 
-  // Add a new function to handle cover image description change
   const handleCoverImageDescriptionChange = (e) => {
     setCoverDescription(e.target.value);
+    console.log("image description changed here:"+e.target.value)
   };
 
-  // Form validation
+  // Form validation (unchanged)
   const validateForm = () => {
     if (!title.trim()) {
       setErrorMessage('Veuillez entrer un titre');
@@ -278,17 +281,18 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     return true;
   };
 
-  // Update article with all content (images and paragraphs)
+  // Fixed: Update article with all content (images and paragraphs)
   const updateArticleWithContent = async () => {
+    console.log('push in')
+
     try {
       // 1. Update the main article information
       const articleInput = {
         id: article.id,
         titles: title,
         rubrique: rubrique.toLowerCase(),
-        caroussel: caroussel, // Include carousel status in update
+        caroussel: caroussel,
         userID: userId
-        // Keep other fields unchanged
       };
       
       const articleResult = await client.graphql({
@@ -333,15 +337,47 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
         }
         
         // Handle paragraph image
-        if (paragraph.image && paragraph.imagePreview) {
-          // Compress the image
-          const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
-          
-          if (paragraph.imageId) {
-            // Update existing image
+        if ((paragraph.image && paragraph.imagePreview) || paragraph.imageId) {
+          // If there's a new image or an existing image to update
+          if (paragraph.image && paragraph.imagePreview) {
+            // Compress the image if there's a new image
+            const compressedImage = await compressImageToTargetSize(paragraph.imagePreview);
+            
+            if (paragraph.imageId) {
+              // Update existing image
+              const imageInput = {
+                id: paragraph.imageId,
+                link: compressedImage,
+                description: paragraph.imageDescription || ''
+              };
+              
+              await client.graphql({
+                query: updateImages,
+                variables: {
+                  input: imageInput
+                }
+              });
+            } else {
+              // Create new image
+              const imageInput = {
+                link: compressedImage,
+                description: paragraph.imageDescription || '',
+                positions: "center",
+                articlesID: article.id,
+                paragraphesID: paragraphId || ""
+              };
+              
+              await client.graphql({
+                query: createImages,
+                variables: {
+                  input: imageInput
+                }
+              });
+            }
+          } else if (paragraph.imageId) {
+            // Only update the image description if no new image was uploaded
             const imageInput = {
               id: paragraph.imageId,
-              link: compressedImage,
               description: paragraph.imageDescription || ''
             };
             
@@ -351,34 +387,18 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
                 input: imageInput
               }
             });
-          } else {
-            // Create new image
-            const imageInput = {
-              link: compressedImage,
-              description: paragraph.imageDescription || '',
-              positions: "center",
-              articlesID: article.id,
-              paragraphesID: paragraphId || "" // Use paragraph ID if available
-            };
-            
-            await client.graphql({
-              query: createImages,
-              variables: {
-                input: imageInput
-              }
-            });
           }
         }
       }
-      
-      // 3. Handle cover image if changed
+
+      // 3. Fix: Handle cover image
+      const coverImageId = article.Images?.items?.find(img => img.positions === "cover")?.id;
+      const firstParagraphId = paragraphs[0]?.id || "";
+
+      // Check if we need to update the cover image or just its description
       if (coverImage && coverPreview) {
-        // Compress the cover image
+        // New cover image was uploaded, compress and update/create
         const compressedCoverImage = await compressImageToTargetSize(coverPreview);
-        
-        // Find existing cover image or use first paragraph for attachment
-        const coverImageId = article.Images?.items?.find(img => img.positions === "cover")?.id;
-        const firstParagraphId = paragraphs[0]?.id || "";
         
         if (coverImageId) {
           // Update existing cover image
@@ -388,12 +408,14 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
             description: coverDescription || ''
           };
           
-          await client.graphql({
+          const reponseImage = await client.graphql({
             query: updateImages,
             variables: {
               input: coverImageInput
             }
           });
+          console.log(reponseImage)
+          console.log("reponseImage")
         } else {
           // Create new cover image
           const coverImageInput = {
@@ -401,8 +423,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
             description: coverDescription || '',
             positions: "cover",
             articlesID: article.id,
-            paragraphesID: firstParagraphId
-          };
+           };
           
           await client.graphql({
             query: createImages,
@@ -411,6 +432,20 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
             }
           });
         }
+      } else if (coverImageId && coverPreview) {
+        // Fixed: Only update the cover image description
+        const coverImageInput = {
+          id: coverImageId,
+          description: coverDescription || ''
+        };
+        
+        const response = await client.graphql({
+          query: updateImages,
+          variables: {
+            input: coverImageInput
+          }
+        });
+        console.log(response)
       }
       
       return article.id;
@@ -421,7 +456,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Handle form submission
+  // Handle form submission (unchanged)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -434,13 +469,13 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     try {
       // Update article with all content changes
       await updateArticleWithContent();
-      
+      console.log('push')
       // Notify parent component of successful update
       onSubmit({ 
         id: article.id,
         titles: title, 
         rubrique,
-        caroussel: caroussel // Include updated carousel status in result
+        caroussel: caroussel
       });
       
       // Close the modal
@@ -453,7 +488,7 @@ const EditModal = ({ onClose, onSubmit, userId, article }) => {
     }
   };
 
-  // Confirm before closing if there are unsaved changes
+  // Confirm before closing (unchanged)
   const handleCloseWithConfirm = () => {
     if (hasChanges) {
       if (window.confirm("Vous avez des modifications non enregistrées. Êtes-vous sûr de vouloir fermer?")) {
