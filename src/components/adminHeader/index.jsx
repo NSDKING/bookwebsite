@@ -47,8 +47,7 @@ export default function Header() {
       <nav className="desktop-nav">
         <ul className="nav-list">
           <li><Link to="/dashboard" className="nav-link">Accueil</Link></li>
-          <li><Link to="/dashboard/caroussel" className="nav-link">Caroussel</Link></li>
-          <li><Link to="/dashboard/agenda" className="nav-link">Agenda</Link></li>
+           <li><Link to="/dashboard/agenda" className="nav-link">Agenda</Link></li>
           <li><Link to="/dashboard/message" className="nav-link">Message</Link></li>
         </ul>
       </nav>
