@@ -65,7 +65,7 @@ function App() {
             <Route path="/discovery" element={<Discovery />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/contact" element={<ContactPage />} />
-            <Route path="/dashboard/carousel" element={<EditCover/>} />
+            <Route path=""/dashboard/caroussel" element={<EditCover/>} />
             <Route path="/dashboard/agenda" element={<NotReadyYet />} />
             <Route path="/article/:id" element={<ArticlePage />} /> {/* New dynamic article route */}
             <Route
