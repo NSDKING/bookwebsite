@@ -1,152 +1,119 @@
-import React, { useState, useEffect } from "react";
-import { API, graphqlOperation } from "aws-amplify";
-import { listMessages } from "../../../graphql/queries"; // Adjust path if needed
-import "./index.css";
-import Header from "../../../components/adminHeader";
+"use client";
+import React, { useEffect, useState } from 'react';
+import './index.css'; // Reuse your existing dashboard styles
+import Header from '../../components/adminHeader/index';
+import { generateClient } from 'aws-amplify/api';
+import { listArticlesWithDetails } from '../Home'; // Adjust path if needed
+import { updateImages } from '../../graphql/mutations';
+import CircularProgress from '@mui/material/CircularProgress';
 
-const messages = [
-    { 
-      id: 1, 
-      mail: "alice@example.com", 
-      name: "Alice Johnson", 
-      message: "Hello! I'm interested in your services.", 
-      numero: "+1234567890" 
-    },
-    { 
-      id: 2, 
-      mail: "bob.smith@example.com", 
-      name: "Bob Smith", 
-      message: "Can you send me more details?", 
-      numero: "+1987654321" 
-    },
-    { 
-      id: 3, 
-      mail: "charlie.doe@example.com", 
-      name: "Charlie Doe", 
-      message: "Thanks for the quick response!", 
-      numero: "+1122334455" 
-    },
-    { 
-      id: 4, 
-      mail: "diana.ross@example.com", 
-      name: "Diana Ross", 
-      message: "When is the next meeting?", 
-      numero: "+1098765432" 
-    },
-    { 
-      id: 5, 
-      mail: "emma.watson@example.com", 
-      name: "Emma Watson", 
-      message: "I really appreciate your help.", 
-      numero: "+1029384756" 
-    },
-    { 
-      id: 6, 
-      mail: "frank.castle@example.com", 
-      name: "Frank Castle", 
-      message: "Let's schedule a call tomorrow.", 
-      numero: "+1472583690" 
-    },
-    { 
-      id: 7, 
-      mail: "george.miller@example.com", 
-      name: "George Miller", 
-      message: "Please review the document I sent.", 
-      numero: "+1654321098" 
-    },
-    { 
-      id: 8, 
-      mail: "hannah.brown@example.com", 
-      name: "Hannah Brown", 
-      message: "Is there an update on my request?", 
-      numero: "+1765432109" 
-    },
-    { 
-      id: 9, 
-      mail: "ian.fleming@example.com", 
-      name: "Ian Fleming", 
-      message: "Looking forward to our collaboration!", 
-      numero: "+1346798520" 
-    },
-    { 
-      id: 10, 
-      mail: "jessica.jones@example.com", 
-      name: "Jessica Jones", 
-      message: "Could you clarify the pricing details?", 
-      numero: "+1987456123" 
-    }
-  ];
-  
-  
+export default function EditCover() {
+  const client = generateClient();
+  const [carouselArticles, setCarouselArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState(null);
 
-const MessagesPage = () => {
-  const [search, setSearch] = useState("");
- 
-  
-  // Mock Messages Data (Replace with API data)
- 
-
-  // Fetch messages from GraphQL
-/**
- *   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const result = await API.graphql(graphqlOperation(listMessages));
-        setMessages(result.data.listMessages.items);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
-
-    fetchMessages();
+  useEffect(() => {
+    fetchCarouselArticles();
   }, []);
- */
 
-  // Filter messages based on search query
-  const filteredMessages = messages.filter((msg) =>
-    msg.name?.toLowerCase().includes(search.toLowerCase()) ||
-    msg.message?.toLowerCase().includes(search.toLowerCase()) ||
-    msg.mail?.toLowerCase().includes(search.toLowerCase()) ||
-    msg.numero?.includes(search)
-  );
+  const fetchCarouselArticles = async () => {
+    setLoading(true);
+    try {
+      const response = await client.graphql({
+        query: listArticlesWithDetails
+      });
+      const articles = response.data.listArticles.items;
+      const filtered = articles.filter(a => a.caroussel);
+      setCarouselArticles(filtered);
+    } catch (error) {
+      console.error("Error fetching carousel articles:", error);
+      showAlert("Erreur lors du chargement des articles", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showAlert = (message, type = 'info') => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert(null), 3000);
+  };
+
+  const handleUpdateImage = async (articleId, imageId, newLink) => {
+    if (!newLink || !imageId) return;
+    try {
+      await client.graphql({
+        query: updateImages,
+        variables: {
+          input: {
+            id: imageId,
+            link: newLink
+          }
+        }
+      });
+      showAlert("Image mise à jour avec succès", "success");
+      fetchCarouselArticles();
+    } catch (error) {
+      console.error("Error updating image:", error);
+      showAlert("Erreur lors de la mise à jour de l'image", "error");
+    }
+  };
 
   return (
-    <div className="message-main">
-      {/* Full-width Header */}
+    <div className="main-container">
       <Header />
 
-      {/* Messages Section */}
-      <div className="messages-container">
-        {/* Search Bar */}
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search messages..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="content">
+        <div className="search-container">
+          <h2 style={{ margin: 0 }}>Modifier les images du carrousel</h2>
         </div>
 
-        {/* Messages List */}
-        <div className="messages-list">
-          {filteredMessages.length > 0 ? (
-            filteredMessages.map((msg) => (
-              <div key={msg.id} className="message-item">
-                <div className="message-info">
-                  <h4>{msg.name || "Unknown"}</h4>
-                  <p>{msg.message}</p>
-                  <small>Email: {msg.mail || "N/A"}</small> |{" "}
-                  <small>Phone: {msg.numero || "N/A"}</small>
+        {alert && (
+          <div className={`alert alert-${alert.type}`}>
+            {alert.message}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="loading-container">
+            <CircularProgress />
+          </div>
+        ) : (
+          <div className="articles-grid">
+            {carouselArticles.map(article => {
+              const mainImage = article.Images?.items?.[0];
+              return (
+                <div className="article-card" key={article.id}>
+                  <div className="article-image-container">
+                    <img
+                      src={mainImage?.link || 'https://via.placeholder.com/300x200?text=Aucune+Image'}
+                      alt="cover"
+                      className="article-image"
+                    />
+                  </div>
+
+                  <h3 className="article-title">{article.titles}</h3>
+                  <p className="article-excerpt">
+                    Vous pouvez changer le lien de l'image utilisée dans le carrousel.
+                  </p>
+
+                  <div className="article-footer">
+                    <input
+                      type="text"
+                      className="search-input"
+                      placeholder="Lien de l'image"
+                      defaultValue={mainImage?.link}
+                      onBlur={(e) =>
+                        handleUpdateImage(article.id, mainImage?.id, e.target.value)
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="no-messages">No messages found.</p>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default MessagesPage;
+}
