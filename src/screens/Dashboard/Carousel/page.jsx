@@ -4,10 +4,10 @@ import './index.css'; // Reuse your existing dashboard styles
 import Header from '../../components/adminHeader/index';
 import { generateClient } from 'aws-amplify/api';
  
-import { updateImages } from '../../graphql/mutations';
-import CircularProgress from '@mui/material/CircularProgress';
+ import CircularProgress from '@mui/material/CircularProgress';
 import { list } from 'aws-amplify/storage';
 import { listArticlesWithDetails } from '../page';
+import { updateAgendas, updateImages } from '../../../graphql/mutations';
 
 export default function EditCover() {
   const client = generateClient();
