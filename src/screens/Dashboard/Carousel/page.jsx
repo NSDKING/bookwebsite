@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import './index.css'; // Reuse your existing dashboard styles
 import Header from '../../components/adminHeader/index';
 import { generateClient } from 'aws-amplify/api';
-import { listArticlesWithDetails } from '../Home'; // Adjust path if needed
+ 
 import { updateImages } from '../../graphql/mutations';
 import CircularProgress from '@mui/material/CircularProgress';
+import { list } from 'aws-amplify/storage';
+import { listArticlesWithDetails } from '../page';
 
 export default function EditCover() {
   const client = generateClient();
